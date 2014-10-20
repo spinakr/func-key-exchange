@@ -78,6 +78,8 @@
 *.ind
 *.ist
 
+Makefile
+
 # minitoc
 *.maf
 *.mtc

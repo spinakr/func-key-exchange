@@ -1,0 +1,289 @@
+\chapter{Background}
+\label{chp:background} 
+This chapter will go through the material from which the applications and implementations later rely. Going through some of the most important schemes and protocols both in encryption and for key exchange.
+
+\section{Public Key Encryption}\label{sec:pke}
+Public key cryptography or asymmetric cryptography allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages. 
+\begin{itemize}
+\item Setup - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
+\item Encryption - takes the public key of the receiver as input together with the message, outputs a cipher text. Only the corresponding private key can decrypt.
+\item Decryption - uses the private key to decrypt the message.
+\end{itemize}
+
+This setup can also be used to achieve message authentication using digital signatures. Either by the use of the same alogrithms as mentioned above or with separate ones besides these. A common problem with public key crypto systems is how you are supposed to trust that a given public key used to sign something really belongs to the claimed owner. This issue is normally dealt with using a trusted \gls{ca} issuing certificates binding a public key to a user identity. The \gls{ca} has a public/private key pair, which is used to sign certificates on request. Initially the \gls{ca} have to publish its public key together with a CA certificate. This is stored by in the browsers of users trusting it. A user will typically send a signed certificate request to the \gls{ca}, including the identity to be associated with the public key. The \gls{ca} verifies the request signature and produces a certificate which is signed using the \glspl{ca} own public key. When signing, the user will include this certificate as profe of his identity, which can be verified by anybody in possession of the \glspl{ca} public key and CA certificate. 
+\paragraph{Pgp/Gpg}\label{pgp}\cite{openpgp, koch2003gnu} is an extension to the classic public key scheme, combining the speed of symmetric key cryptography with the dynamic nature of public key systems. This is done by generating a random session key which is used to encrypt a message, this key is then encrypted using the public keys of each recipients and concatenated together with the cipher text. Pgp uses a hierarchy of trusted \glspl{ca} as described, but also what's' called a "web of trust" where users can sign the public keys of eachother to assure authenticity. 
+
+
+
+\section{Secret Sharing}\label{sec:secret_sharing}
+In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into n pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Shamir proposed a solution to this with his secret sharing scheme \cite{shamir_share}. The main idea behind the scheme is that given k points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shadows, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shadows are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shadows we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
+
+\begin{equation}
+ y(x) = m + a_1*x + a_2*x^2 + ... + a_{k-1} * x^{k-1} 
+\end{equation}\label{eq:polynom}
+
+
+\subsection{Linear Secret Sharing}\label{subsec:lsss}
+A \gls{lsss} ... \todo{write about linear secret sharing - used in the implementation of ABE in charm}
+
+\section{Pairing-based encryption}
+Let $G$ be a group of prime order $q$ with generator $g$. $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^a, b^b)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. These assumptions are used, and relied on, in earlier crypto systems. The systems explored in this project use pairing of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic group which allows the creation of new schemes based on the reduction of one of the problems from earlier. The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
+\begin{itemize}
+\item Bilinearity - for all $P, Q \in G_1$ and all $a,b \in \mathbb{Z}_q$, then $e(P^a, Q^b) = e(P, Q)^{ab}$
+\item Non-Degeneracy - if $P \neq 0 \implies (P,P) \neq 1$
+\end{itemize}
+The Weil and Tate pairing are the most used pairings where these properties hold. The pairings usually consist of one Elliptic curve paired with a finite field. 
+The point with all this is that problems in the first group may not all be hard in the pairing group. Discrete-logarithms are still hard since $e(g,g)$, $e(g,g^a)$ $\in G_T$ is as hard as $g,g^a \in G$ where $G_T$ is the pairing group.
+For \gls{ddh} though, we can see that to test if $z=xy$ given $g, g^x, g^y, x^z$, we can just check if $e(g, g^z) = e(g^x, g^y)$. \Gls{ddh} is thus replaced by \gls{bddh} which is defined as - given $h, g, g^x, g^y, e(h,g)^z$ it is hard to decide if $xy = z$. \cite{pairing-survey} These definitions made it possible to implement the \gls{ibe} and \gls{abe} as described in the next section.
+\todo[inline]{not sure if this is a precise understanding of pairings(?)}
+
+\section{Functional Encryption}
+Before public key cryptography was introduced, secure communication was only achieved when two parties possessed the same secret key which could be used to encrypt and decrypt messages between them. This was changed with the introduction of public key cryptography as mentioned in \ref{sec:pke}. Now, many years later, this is no longer sufficient to cover the new notion of the Internet - with distributed systems and cloud-based services. 
+In standard public key encryption schemes the focus is on full encryption and decryption of the message, it's all or nothing, either you get to know the plain text or you can't. Functional encryption, as described in \cite{boneh2012functional}, describes a different perspective on cryptography where what you get to know can differ depending on who or what your are. One key might be used to decrypt only a specified part of the cipher text - a "function" of it. Functional schemes also make it possible for several different keys to decrypt a message if they satisfy a policy, completely or partially. This allows us to encrypt a message for a certain group of users, and later grant new users access to it without having to decrypt it. A \gls{kms} issuing  keys based on some characteristics, which can be used to decrypt message encrypted previously. The term "Functional Encryption" has come to describe a wide spectrum of modern cryptography techniques, including identity-based encryption and attribute-based encryption, which will be described and demonstrated in the following sections.
+
+\subsection{Identity-based encryption}\label{subsec:IBE}
+Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and an claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody are forging it. Each user have to keep a large archive of keys belonging to whom he wants to communicate. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe}\cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot power is now in the hands of the \gls{kms}. Algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. 
+
+\begin{itemize}
+\item Setup - Taking some security parameters $1^k$ a master public/secret key pair $(mpk, msk)$ are generated.
+\item Key delegation - Using $mpk$, $msk$ and some $id$ generating a $sk_{id}$ for the specific user. 
+\item Encryption - Encrypts a message $m$ using $mpk$ and the $id$ of the desired receiver. 
+\item Decryption - Decrypts cipher text $ct$ using $sk_{id}$, obtaining $m$. 
+\end{itemize}
+
+The scheme is demonstrated using the Charm framework and the implementation described by Waters\cite{ibe_waters09}.
+
+\noindent See the following commands:
+\begin{lstlisting}[language=bash]
+
+>>> from charm.toolbox.pairinggroup import PairingGroup, GT
+>>> from charm.schemes.ibenc.ibenc_waters09 import DSE09
+>>> group = PairingGroup('SS512')
+>>> ibe = DSE09(group)
+>>> mpk, msk = ibe.setup()
+>>> ID = "student@stud.ntnu.no"
+>>> secret_key = ibe.keygen(mpk, msk, ID)
+>>> msg = group.random(GT)
+>>> ct = ibe.encrypt(mpk, msg, ID)
+>>> decrypted_msg = ibe.decrypt(ct, secret_key)
+>>> msg == decrypted_msg
+True
+>>> 
+
+
+\end{lstlisting}
+
+
+
+Notice that anybody can encrypt a message for any user without having a public key stored locally, we simply use the master public key together with the identity of the recipient. This removes a lot of overhead known from \gls{pki}, we now only need one key for each domain. \Gls{ibe} is a somewhat more intuitive scheme, since the identity of the recipients is used as the public key, thus no connection between different public keys and user identities have to be stored.
+
+\subsection{Attribute-based encryption}\label{subsec:ABE}
+
+Attribute-based encryption as explained by Goyal et al. \cite{ABE} introduce an encryption scheme based on user attributes, from which the secret key is generated. Only a key satisfying the access structure can decrypt the cipher text. This is typically useful in cases where the encryptor does not care about who decrypts as long as they satisfy the correct attributes or a set of them. Each user will have a private key corresponding to his set of attributes, from each domain. When encrypting, a policy is specified, this is typically a access tree where the attributes required are leaf nodes and internal nodes are "AND" or "OR"-gates. Different combinations of attributes may therefore be able to encrypt. We can also use these logical gates to construct threshold requirements, where we require $k$ out of $n$ attributes. The encryptor can in example encrypt a message with the policy\\ \centerline{("NTNU" and "5th year" and Telematics dpmt.) or} \\ \centerline{("Professor" and "Telematics dpmt.") or "admin"}
+Now a user with either the "admin"-attribute or a set including "NTNU", "5th year" and "Telematics dpmt" would be able to decrypt. A user can thus create access structures allowing his id or some combination of other attributes to decrypt without having the attributes himself. It is worth noticing that \gls{abe} is a generalisation of \gls{ibe} since an identity can be used as an attribute. thus we have a similar structure of algorithms as in \gls{ibe} (subsection \ref{subsec:IBE}).
+
+\begin{itemize}
+\item Setup - Taking some security parameters $1^k$ a master public/secret key pair $(mpk, msk)$ are generated.
+\item Key generation - Using $mpk$, $msk$ and some $S$ describing the set of attributes - generates a $sk$ for the specific attribute combination. 
+\item Encryption - Encrypts a message $m$ using $mpk$ and an access structure $A$ describing the policy of the encryption. The attributes in the access structure will define who's able to decrypt. 
+\item Decryption - Decrypts cipher text $ct$ using $sk$ corresponding to an attribute set $S$, obtaining $m$. 
+\end{itemize}
+
+
+Charm also include an implemented \gls{abe} scheme based on Waters\cite{abe_waters09}, which can be used to describe how the algorithms work. This construction will later be used in the implementation of a prototype attribute-based key exchange application. The implementations are written in python and are thus easily readable. A walkthrough of the \gls{abe} protocol using the implementation will be used to demonstrate the algorithms mentioned. The implementation and a sample run of the methods are included for each of the algorithms.
+
+\subsubsection{Setup}
+
+
+\begin{minted}{python}
+def setup(self):
+    g1, g2 = group.random(G1), group.random(G2)
+    alpha, a = group.random(), group.random()        
+    e_gg_alpha = pair(g1,g2) ** alpha
+    msk = {'g1^alpha':g1 ** alpha, 'g2^alpha':g2 ** alpha} 
+    pk = {'g1':g1, 'g2':g2, 'e(gg)^alpha':e_gg_alpha, 
+    'g1^a':g1 ** a, 'g2^a':g2 ** a}
+    return (msk, pk)
+\end{minted}
+
+\begin{lstlisting}
+>>> from charm.toolbox.pairinggroup import PairingGroup,ZR,
+    G1,G2,GT,pair
+>>> from charm.schemes.abenc.abenc_waters09 import CPabe09
+>>> groupObj = PairingGroup('SS512')
+>>> cpabe = CPabe09(groupObj)
+>>> (msk, mpk) = cpabe.setup()
+>>> print msk
+    {'g1^alpha': <pairing.Element object at 0x7fc30b633ed0>, 
+    'g2^alpha': <pairing.Element object at 0x7fc30b606b28>}
+>>> print pk
+    {'g1^a': <pairing.Element object at 0x7fc30b606b70>, 
+    'g2^a': <pairing.Element object at 0x7fc30b606bb8>, 
+    'g2': <pairing.Element object at 0x7fc30b627e40>, 
+    'g1': <pairing.Element object at 0x7fc30b627d68>, 
+    'e(gg)^alpha': <pairing.Element object at 0x7fc30b633f18>}
+>>>
+\end{lstlisting}
+
+This class can be used as shown in the following demonstration, the environment from which the methods are run already have defined a elliptic curve with bilinear mapping which can be used. The master public and private key pair is then store locally at a server acting as a \gls{kms}. After initialising the protocol we can generate a secret key using a defined set of attributes. For this we have the key generation method as following. This will be used by the \gls{kms} to generate secret keys for users in the protocol. How these keys are distributed is a separate concern which is not dealt with in this report. It is demonstrated how the keys are generated but now how they are distributed to the correct users. It is assumed that each user can receive their key securely from the \gls{kms}.
+
+
+\subsubsection{Key Generation}
+\begin{minted}{python}
+def keygen(self, mpk, msk, attributes):        
+    t = group.random()
+    K = msk['g2^alpha'] * (pk['g2^a'] ** t)
+    L = pk['g2'] ** t
+    k_x = [group.hash(unicode(s), G1) ** t for s in attributes]
+    
+    K_x = {}
+    for i in range(0, len(k_x)):
+        K_x[ attributes[i] ] = k_x[i]    
+
+    attributes = [unicode(a) for a in attributes]
+
+    key = { 'K':K, 'L':L, 'K_x':K_x, 'attributes':attributes }
+    return key
+
+\end{minted}
+
+
+\begin{lstlisting}
+>>> attr_list = ['THREE', 'ONE', 'TWO']
+>>> secret_key = cpabe.keygen(pk, msk, attr_list)
+>>> print secret_key
+    {'K_x': {'TWO': <pairing.Element object at 0x7fc30b606e40>, 
+             'THREE': <pairing.Element object at 0x7fc30b606db0>, 
+             'ONE': <pairing.Element object at 0x7fc30b606df8>}, 
+     'K': <pairing.Element object at 0x7fc30hen during b606d20>, 
+     'L': <pairing.Element object at 0x7fc30b606c00>, 
+     'attributes': [u'THREE', u'ONE', u'TWO']}
+>>> 
+\end{lstlisting}
+
+The secret key includes a list of all the attributes with a corresponding hash value raised to the power of a random value $t \in \mathbb{Z}_p$. Additionally a list of the unicode representations of the attributes are added - this will later be used when decrypting, to check if a given key comply with the policy given in the cipher text. This way we avoid actually trying to decrypt if the key doesn't contain the correct attributes. The public parameters in $pk$ must be published together with the secret keys of each user. We can now generate a message which can be encrypted. A major problem when doing \gls{abe} is preventing collusion attacks, where a group of users try to combine their attributes trying to satisfy a more restrictive access structure then what their individual sets of attributes allow. This construction avoids this by randomising each secret with a generated exponent t. When decrypting, each share is raised to the power of this t, which is supposed to bind the components of each key together. During decryption these shares are only relevant to the particular key used in that exact run of the decryption algorithm.
+
+
+
+\subsubsection{Encryption}
+\begin{minted}{python}
+def encrypt(self, pk, M, policy_str):
+    # Extract the attributes as a list
+    policy = util.createPolicy(policy_str)        
+    p_list = util.getAttributeList(policy)
+    s = group.random()
+    C_tilde = (pk['e(gg)^alpha'] ** s) * M
+    C_0 = pk['g1'] ** s
+    C, D = {}, {}
+    secret = s
+    shares = util.calculateSharesList(secret, policy)
+
+    # ciphertext
+    for i in range(len(p_list)):
+        r = group.random()
+        if shares[i][0] == p_list[i]:
+           attr = shares[i][0].getAttribute() 
+           C[ p_list[i] ] = ((pk['g1^a'] ** shares[i][1]) *
+           (group.hash(attr, G1) ** -r))
+           D[ p_list[i] ] = (pk['g2'] ** r)
+    
+    return { 'C0':C_0, 'C':C, 'D':D , 'C_tilde':C_tilde, 
+            'policy':unicode(policy_str), 'attribute':p_list }
+
+\end{minted}
+
+\begin{lstlisting}
+>>> policy = '((ONE or THREE) and (TWO or FOUR))'
+>>> msg = group.random(GT)
+>>> cipher_text = cpabe.encrypt(master_public_key, msg, policy)
+>>> print msg
+>>> print cipher_text
+    {
+    'C': {
+            u'TWO': <pairing.Element object at 0x7f0407de4228>, 
+            u'FOUR': <pairing.Element object at 0x7f0407de42b8>, 
+            u'THREE': <pairing.Element object at 0x7f0407e5acd8>, 
+            u'ONE': <pairing.Element object at 0x7f0407e5af18>}, 
+    'D': {
+            u'TWO': <pairing.Element object at 0x7f0407e5adb0>, 
+            u'FOUR': <pairing.Element object at 0x7f0407e5afa8>, 
+            u'THREE': <pairing.Element object at 0x7f0407e5ae88>, 
+            u'ONE': <pairing.Element object at 0x7f0407e5af60>}, 
+    'attribute': [u'ONE', u'THREE', u'TWO', u'FOUR'], 
+    'C_tilde': <pairing.Element object at 0x7f0407e5ad68>, 
+    'policy': u'((ONE or THREE) and (TWO or FOUR))', 
+    'C0': <pairing.Element object at 0x7f0407e5ac90>}
+\end{lstlisting}   
+
+Before encrypting, a policy is specified, this will be the access structure used in the encryption. Since the protocol relies on pairings, only pairing elements can be used, a random message $m$ is thus generated from the group to be used in the demonstration. If we were to encrypt some kind of readable message we would need an adapter on top, mapping messages to pairing elements. This paper will focus on applications where this is not needed - random group elements is sufficient for the constructions presented later. The encryption method starts off by extracting the attributes from the policy provided, then a random group object is generated and used together with the public key and the message to calculate a internal cipher text. Using this secret a set of shares are generated according to the \gls{lsss} in \ref{subsec:lsss}. These shares can now be used to recover $s$ when decrypting.
+
+
+\subsubsection{Decryption}
+\begin{minted}{python}
+def decrypt(self, pk, sk, ct):
+    policy = util.createPolicy(ct['policy'])
+    pruned = util.prune(policy, sk['attributes'])
+    if pruned == False:
+        return False
+    coeffs = util.getCoefficients(policy)
+    numerator = pair(ct['C0'], sk['K'])
+    
+    # create list for attributes in order...
+    k_x, w_i = {}, {}
+    for i in pruned:
+        j = i.getAttributeAndIndex()
+        k = i.getAttribute()
+        k_x[ j ] = sk['K_x'][k]
+        w_i[ j ] = coeffs[j]
+        
+    C, D = ct['C'], ct['D']
+    denominator = 1
+    for i in pruned:
+        j = i.getAttributeAndIndex()
+        denominator *= ( pair(C[j] ** w_i[j], sk['L']) *
+        pair(k_x[j] ** w_i[j], D[j]) )   
+    return ct['C_tilde'] / (numerator / denominator)
+
+\end{minted}
+
+\begin{lstlisting}
+>>> decrypted = cpabe.decrypt(master_public_key, secret_key, cipher_text)
+>>> decrypted == msg
+True
+>>> 
+\end{lstlisting}
+
+Decryption is done using the public parameters and a secret key corresponding to a set of attributes. First step in the decryption is to compare the access structure and the attributes present in the secret key. If the policy is not fulfilled the method can return straight away. The pruned method performs this validation and returns a "pruned" list of attributes. This is the minimal subset of the attributes satisfying the policy - in example a set including both childes of a "OR" node would be pruned to only include one of these. Finally the secrets are combined and used to recover the message. \todo{could show all the math describing how M are recovered (?)}
+
+
+\paragraph{}
+From the scheme described it is noticeable from the encryption method that anybody can in fact encrypt for any set of attributes, as long as they have the master public key. The authentication is not mutual, the encryptor doesn't have to have any specific attributes to be able to encrypt. The protocol only provide assurances that nobody without the correct attribute set can decrypt the message, this is sufficient when used as a public key encryption mechanism, but might not hold in cases where mutual authentication is required.
+
+\section{Key Exchange}\label{sec:key_exchange}
+A fundamental requirement in many cryptographic schemes is a way of establishing a common secret to be used later to achieve confidentiality or integrity. This is usually solved using a key exchange scheme. In many scenarios we may as well have a group of players, in example conference calls where the participants are known in advance. A different scenario occurs when we don't know how many and who the participants is, and they may join and leave dynamically. 
+
+\subsection{Group Diffie-Hellman Key Exchange}
+The Diffie-Hellmann key exchange algorithm in its original form allows two parties to jointly establish a common secret key which later can be used to encrypt traffic and etc. Since the introduction of the 2-party Diffie-Hellmann researchers tried to extend it to support groups of parties \cite{steiner1996diffie, groupDH}. These configurations allow several parties, already in some sort of ring or group, typically a multicast group or similar network, to establish a common session key. In the 2-party Diffie-Hellman a cyclic group G =  $\langle x \rangle$ of prime order p is chosen carefully. Then each party chose a random number, a and b, then $g^a$ and $g^b$ can be exchanged and the common secret key $g^{ab}$ computed. The group configuration of the scheme uses the same principle only with several participants as shown in Figure~\ref{fig:dhgroup}. The configuration is the same for n players. The scheme starts of with the first player raising g to the power of his private key and sends this value to the next player in the chain. He then raises the received value to the power of his private key and sends it, plus the intermediate values on to the next player, this continues until the last player receives the set, he can now compute the session key $g^{x_1,x_2.x_3,...,x_n}$. An attacker would have been able to see all the sent combinations, but none of these combine into the session key. New players can not easily join or leave since all previous players would have to update their set. The group Diffie-Hellman can be extended further to a more dynamic variant, allowing joining and leaving within the group of players\cite{dynamicGroupDH}.
+\begin{figure}
+\centering
+\includegraphics[page=2, scale=0.7]{dhgroup.pdf}
+\caption{D-H group key exchange}
+\label{fig:dhgroup}
+\end{figure}
+
+\section{Hybrid Public key Encryption}\label{sec:hybrid}
+A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption technique and a symmetric key encryption technique, from which the former, \gls{kem}, is used to encrypt some key $K$, and the latter, \gls{dem}, encrypts the data. This setup can be applied using a variety of different cryptographic systems for both the \gls{kem} and \gls{dem}. 
+
+\subsection{Key encapsulation mechanism}
+\Gls{kem} \cite{kem_kurosawaP14} is a technique where a random key $K$ is generated together with its encryption $C$ - the encapsulation. This is useful for distribution of symmetric keys that can be used again to generate session keys for two or several parties, depending on the encapsulation mechanism. A \gls{kem} consists of three algorithms:
+\begin{itemize}
+\item Key generation - generation of the symmetric key used by the \gls{dem}.
+\item Encryption - used to encrypt the generated key, usually using some public key.
+\item Decryption - reveals the symmetric key from the encapsulation.
+\end{itemize}
+
+This configuration will be used when constructing key exchange schemes using both \gls{ibe} and \gls{abe}. Hybrid encryption schemes are basically doing key exchange. The focus will be on the setting with several users doing key exchange, a sollution is then to use a hybrid scheme to exchange encapsulations of randomly generated symmetric keys which can be combined to one sessions key. This session key can then be used by the \gls{dem} to communicate securly.
+
+
+
+

@@ -1,0 +1,18 @@
+\chapter{Introduction}
+\label{chp:intro} 
+\section{Motivation}
+In distributed systems users might not want to publish their identity if it isn't absolutely necessary, which in most cases it isn't. It is more important that the user is legit and have the correct privileges. If we could assure that all users participating in some protocol or application had the right privileges or simply the correct purpose, we could go without knowing the exact identities. This can be achieved using attributes in the encryption mechanisms. Attributes can be anything - personal attributes as birth year, gender or nationality. An example could be affiliation to user groups providing access control, where only the group members would be allowed to communicate. Or attributes could be related to certifications or titles, this way you can be assured that the person you are communicating with has knowledge about something you need help with, without having to knowing the identity. This generalisation can also be extended to include systems where the identity is one of or the only attribute. Thus achieve identity based systems without the need to generate, distribute and store huge amounts of public keys. This project describe the term functional key exchange, covering key exchange mechanisms using the mentioned ideas to achieve dynamic group key exchange in a functional manner. Not exposing identities if not absolutely necessary is the main focus when discussing possible applications of these functional key exchange methods. There already exist several proposed schemes for both attribute- and identity-based key exchange, but there are few or none examples of systems applying the schemes in real applications. 
+
+\section{Related work}\label{sec:related_work}
+
+
+\section{Scope and objectives}\label{sec:scope}
+
+The project will be focused around applying a attribute-based key exchange scheme in a real application, based on a implementation of simple attribute-based encryption in the Charm framework \cite{DBLP:Charm13}.
+
+
+\section{Limitation}\label{sec:limitations}
+The project will not try to solve problems related to key distribution and how to deploy a secure and trustworthy key management service. For the proposed system it will be assumed that this kind of service exists.
+
+\section{Outline}\label{sec:outline}
+The background chapter will describe all the components that are essential to both functional encryption and key exchange, from basic public key encryption to functional encryption schemes, including secret sharing, pairing-based encryption and key encapsulation. The functional encryption algorithms will be presented and discussed using code from Charm, this is logical since one of these schemes is basis for the system implemented in this project. In the next chapter some functional key exchange schemes will be described and possible application areas discussed. Finally a prototype system will be implemented and presented, using attribute-based encryption and key encapsulation. The system will be a distributed chat using attribute-based key exchange to achieve secure communication with dynamic users.

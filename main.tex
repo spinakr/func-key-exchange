@@ -1,0 +1,87 @@
+\documentclass{MScthesisITEM}
+
+\usepackage{graphicx}
+\usepackage[acronym]{glossaries}
+\usepackage{todonotes}
+\usepackage{amsmath,amssymb,booktabs}
+\usepackage{listings}
+\usepackage{amsfonts}
+\usepackage{pbox}
+\usepackage{minted}
+\makeglossaries
+
+
+
+\title{Functional Key Exchange In A Distributed Environment}
+\author{Anders Kofoed}
+\professor{Colin Boyd, ITEM} % Affiliation = ITEM for instance
+\supervisor{Colin Boyd, ITEM}
+
+%% Uncomment the following in case you want subfigures; note that there will be a warning for the caption package
+% \let\subcaption\undefined
+% \let\subfloat\undefined
+% \usepackage[bf]{caption}
+% \usepackage{subcaption}
+
+\DeclareGraphicsExtensions{.pdf,.jpg}
+\graphicspath{{./figs/}}
+
+\loadglsentries{glossary.tex}
+\makeglossaries
+
+\begin{document}
+\selectlanguage{english}
+\pagenumbering{roman}
+\pagestyle{plain}
+
+\titleITEM
+\selectlanguage{english}
+\include{problem_description}
+\include{Chapters/abstract}
+
+%%Preface
+\include{Chapters/preface}
+
+%%Table of Contents
+\tableofcontents*
+
+%%\listoffigures
+%%\cleardoublepage
+
+%%\listoftables
+%%\cleardoublepage
+
+%%\listofalgorithms
+%%\addcontentsline{toc}{chapter}{List of Algorithms}
+%%\cleardoublepage
+
+%% Glossary
+%%\printglossary[title=List of Symbols, style=long]
+\printglossaries % prints just the list of acronyms
+\glsaddall
+
+\pagenumbering{arabic}
+\pagestyle{ruled}
+%% include here the other chapters
+\include{Chapters/introduction}
+\include{Chapters/background}
+\include{Chapters/functional-key-exchange}
+\include{Chapters/design-and-implementation}
+\include{Chapters/discussion}
+\renewcommand*{\bibname}{References}
+\bibliographystyle{plain}
+\bibliography{main}
+\nocite{*}
+
+%% Uncomment the following if you have any appendix
+% \appendix
+% \addtocontents{toc}{%
+%  \protect\vspace{1em}% 
+%  \protect\noindent \bfseries \appendixtocname\protect\par
+%  \protect\vspace{-.5em}%
+% }
+% \renewcommand{\chaptername}{\appendixname}
+%% include below possible appendices (chapters)
+
+
+\end{document} 

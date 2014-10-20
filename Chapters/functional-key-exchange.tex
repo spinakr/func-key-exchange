@@ -1,0 +1,36 @@
+\chapter{Functional Key Exchange}\label{chp:funckeyenc} 
+When communicating on the Internet it is important to control what entities have access to the messages. In most cases it is important that the users can trust that the their communication cannot be stolen or eavesdropped on. Encryption is used to secure communication, to do this efficiently a shared key is usually needed. Functional key exchange is in our context defined as a set of key exchange mechanisms using some function to decided if a participant should be allowed to take part in, or be allowed access to, the key exchange. The functions will use some arguments as input and based on these decide if the session key should be output or not. This chapter will explain some proposed schemes trying to adapt this idea, then further explore possibly useful application areas and ideas. \Gls{ibake} and \gls{abake} will be used as examples, with most focus on the latter.
+%Function taking attributes inn then decide if the key should be output or not.
+
+\section{\Glsdesc{ibake}}
+\Gls{ibe} as described in \ref{subsec:IBE}, can by utilised to provide two-party mutually \gls{ake} \cite{ibake}. The approach is based on a Diffie-Hellman key exchange using an elliptic curve. Each party chose random points $a,b$. $a^p, b^p$ are then encrypted using the other parties public key and then exchanged in succession. B will include $p^a$ which he recieved from a, this is done so that A can verify that B actually was able to decrypt what he sent. B actually adds to what he receives from A by decrypting and adding his contribution and then encrypting again. After decrypting, the session key is the product $a^{bp}$, which both can calculate. After exchanging secrets, A has to authenticate himself in the same way as B did, by sending the secret he got from B back, to show that he was able to decrypt what B sent. This technique provides mutual implicit authentication between the participants, since only the users with the correct identity can decrypt. Both parties can thus be sure that no other user than the user in possession of the private key corresponding to the identity can produce the secret key. The procedure is shown in Protocol \ref{protocol:ibake}.
+
+\newtheorem{protocol}{Protocol} %%move deffenition to main
+\begin{protocol}\label{protocol:ibake}
+
+\[
+\begin{array}{@{}l@{}c@{}l@{}}
+\toprule
+\text{A - given curve and point p} && \text{B - given curve and point p} \\
+\toprule
+\text{chose random point a} \\
+& \xrightarrow{\textstyle IBEnc_B(p^a)} \\
+& & \text{chose random point b}\\
+& \xleftarrow{\textstyle IBEnc_B(p^a, p^b)} \\
+\pbox{20cm}{verify $p^a$ after decrypting\\ using private key}\\
+& \xrightarrow{\textstyle IBEnc_B(p^b)}\\
+& & \pbox{20cm}{verify $p^b$ to authenticate that A\\ actually decrypted the message}\\ 
+& \pbox{20cm}{sk = $p^{ab}$\\sid=$(p^a, p^b)$}\\
+\bottomrule
+\end{array}
+\]
+\end{protocol}
+
+This implementation demonstrates a scheme for key exchange between two parties with the focus on assuring authenticity of the identities of the participants. This is mostly a more effective implementation of public key crypto systems, the main difference from previously popular systems is the removal of \gls{pki} by switching from \glspl{ca} to \glspl{kms}. Point being that the main idea is still to encrypt some message or symmetric key for \emph{one} specific user. 
+
+%\section{\Glsdesc{pdke}}
+\section{\Glsdesc{abake}}
+\cite{gorantla2010attribute} introduced the concept of \gls{abake} using a attribute-based key encapsulation mechanism. In short this is a \gls{kem} with \gls{abe} as the encryption mechanism. \todo[inline]{IN PROGRESS}
+
+
+\section{Applications}\label{sec:apps}
