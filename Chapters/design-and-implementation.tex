@@ -2,6 +2,8 @@
 This chapter suggests a prototype implementation of one possible application, on background of the principles and ideas in the previous two sections. The protocol structure will be displayed, together with examples from the code and test runs using the system.
 
 \section{System specifications}\label{sec:chat}
+As mentioned in \ref{sec:apps} there are several scenarios where functional key exchange can provide security and privacy. This section will describe the structure and specifications for a chat system utilizing \gls{abake} as described in \ref{sec:abake} and \cite{DBLP:abake}. The system consists of a set of clients running a client application and a server for distribution. It could easily have been altered to support peer-to-peer, since the server only acts as a intermediate for broadcasting, caching of encapsulations and policy management. 
+\paragraph{The specifications} of the system is to provide encrypted communication between users whom satisfy the room policy. The users should obtained a shared session key through \gls{abake}. This way we assure implicit authentication of all users taking part in the conversation. A user should thus also be able to participate in the exchange without ever having to provide a identity. It is assumed that all users have registered with some \gls{kms} prior to the key exchange, a user would typically register a set of attributes which would have to be approved by the system authority. When new users join, they should be able to upload their contribution and receive the rest of the keying material from the server; the users will then have to compute the new session key. This way users will only be able to read what has been written from after they joined, even though the chat log might be available, only the users in possession of that exact key can read it.
 \section{Models and construction}
 Figure\ref{fig:encapdistr}
 
@@ -12,6 +14,12 @@ Figure\ref{fig:encapdistr}
 \label{fig:encapdistr}
 \end{figure}
 
+\begin{figure}
+\centering
+\includegraphics[trim=2cm 2cm 0cm 1cm ,scale=1]{Flow.pdf}
+\caption{System flow.}
+\label{fig:flow}
+\end{figure}
 \section{Implementation}
 \section{System demonstration}
 
