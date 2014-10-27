@@ -8,6 +8,7 @@
 \usepackage{amsfonts}
 \usepackage{pbox}
 \usepackage{minted}
+\usepackage{geometry}
 \makeglossaries
 
 
@@ -45,7 +46,7 @@
 %%Table of Contents
 \tableofcontents*
 
-%%\listoffigures
+\listoffigures
 %%\cleardoublepage
 
 %%\listoftables
@@ -74,14 +75,18 @@
 \nocite{*}
 
 %% Uncomment the following if you have any appendix
-% \appendix
-% \addtocontents{toc}{%
-%  \protect\vspace{1em}% 
-%  \protect\noindent \bfseries \appendixtocname\protect\par
-%  \protect\vspace{-.5em}%
-% }
-% \renewcommand{\chaptername}{\appendixname}
-%% include below possible appendices (chapters)
+ \appendix
+ \addtocontents{toc}{%
+  \protect\vspace{1em}% 
+  \protect\noindent \bfseries \appendixtocname\protect\par
+  \protect\vspace{-.5em}%
+ }
+ \renewcommand{\chaptername}{\appendixname}
+% include below possible appendices (chapters)
+\chapter{Client.py}
+\lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\scriptsize]{server.py}
 
+\chapter{Server.py}
+\lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\scriptsize]{client.py}
 
 \end{document} 
