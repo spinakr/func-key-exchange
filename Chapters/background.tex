@@ -1,6 +1,9 @@
 \chapter{Background}
 \label{chp:background} 
-This chapter will go through the material from which the applications and implementations later rely. Going through some of the most important schemes and protocols both in encryption and for key exchange.
+This chapter will go through the material from which the applications and implementations later rely. Charm is the framework used to implement the schemes, this will be described to some extent in the beginning of this chapter. Continuing on to important principles used in protocols both in encryption and for key exchange.
+
+\section{Charm}
+Charm\cite{DBLP:Charm13} is a prototyping framework for cryptographic systems. It includes all the tools needed to implement most crypto systems, as well as keeping a collection of reusable code. The idea is to make it sufficiently easy to prototype systems which earlier only existed in research papers without actually being implemented. It is of course possible to implement all schemes using other, lower level design methods, which may make for better and more efficient implementations. Most of the tools needed may be available but to combine and make good use of these is not easy. Charm focus on being readable and efficient use. Several existing libraries is used to provide primitives needed, such as pairing groups and modular arithmetics. The design and implementation of Charm is described in detail in "Charm: a framework for rapidly prototyping cryptosystems"\cite{DBLP:Charm13}. Implementations from Charm will be used in this project to implement other protocols. Schemes from Charm will also be used as examples to describe protocols, prior to this.
 
 \section{Public Key Encryption}\label{sec:pke}
 Public key cryptography or asymmetric cryptography allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages. 
@@ -79,7 +82,7 @@ Notice that anybody can encrypt a message for any user without having a public k
 \subsection{Attribute-based encryption}\label{subsec:ABE}
 
 Attribute-based encryption as explained by Goyal et al. \cite{ABE} introduce an encryption scheme based on user attributes, from which the secret key is generated. Only a key satisfying the access structure can decrypt the cipher text. This is typically useful in cases where the encryptor does not care about who decrypts as long as they satisfy the correct attributes or a set of them. Each user will have a private key corresponding to his set of attributes, from each domain. When encrypting, a policy is specified, this is typically a access tree where the attributes required are leaf nodes and internal nodes are "AND" or "OR"-gates. Different combinations of attributes may therefore be able to encrypt. We can also use these logical gates to construct threshold requirements, where we require $k$ out of $n$ attributes. The encryptor can in example encrypt a message with the policy\\ \centerline{("NTNU" and "5th year" and Telematics dpmt.) or} \\ \centerline{("Professor" and "Telematics dpmt.") or "admin"}
-Now a user with either the "admin"-attribute or a set including "NTNU", "5th year" and "Telematics dpmt" would be able to decrypt. A user can thus create access structures allowing his id or some combination of other attributes to decrypt without having the attributes himself. It is worth noticing that \gls{abe} is a generalisation of \gls{ibe} since an identity can be used as an attribute. thus we have a similar structure of algorithms as in \gls{ibe} (subsection \ref{subsec:IBE}).
+Now a user with either the "admin"-attribute or a set including "NTNU", "5th year" and "Telematics dpmt" would be able to decrypt. A user can thus create access structures allowing his id or some combination of other attributes to decrypt without having the attributes himself. It is worth noticing that \gls{abe} is a generalization of \gls{ibe} since an identity can be used as an attribute. Thus we have a similar structure of algorithms as in \gls{ibe} (subsection \ref{subsec:IBE}).
 
 \begin{itemize}
 \item Setup - Taking some security parameters $1^k$ a master public/secret key pair $(mpk, msk)$ are generated.
@@ -90,6 +93,25 @@ Now a user with either the "admin"-attribute or a set including "NTNU", "5th yea
 
 
 Charm also include an implemented \gls{abe} scheme based on Waters\cite{abe_waters09}, which can be used to describe how the algorithms work. This construction will later be used in the implementation of a prototype attribute-based key exchange application. The implementations are written in python and are thus easily readable. A walkthrough of the \gls{abe} protocol using the implementation will be used to demonstrate the algorithms mentioned. The implementation and a sample run of the methods are included for each of the algorithms.
+
+
+\begin{figure}
+\begin{mdframed}
+
+    \paragraph{Setup} - Group $G$ of prime order $p$ is chosen from generator $g$. $\alpha, a \in \mathbb{Z}_p$ are generator at random. $H: \{0,1\}\* \rightarrow G$ is a hash function. The master public key is then $mpk = g, e(g,g)^{\alpha}, g^a$, where $e()$ is a pairing as described in \ref{subsec:lsss}. The master secret key is $msk = g^{\alpha}$.
+\paragraph{Key generation} - takes $msk$ and a set $S$ of attributes as arguments and randomly chose $t \in \mathbb{Z}_p$. The constructed private key is then \\ 
+\centerline{$K = g^{\alpha}g^{at}\hspace{1cm} L = g^t \hspace{1cm}   \forall x\in S, K_x = H(x)^t$}.
+
+    \paragraph{Encryption} - Takes mpk and a message m as arguments, together with a access structure $(M,p)$ where M is an $l\times n$ matrix and $p$ is a function associating rows in M with attributes. A random vector $\vec{v} = (s, y_2, ..., y_n)\in \mathbb{Z}_p^n$ is chosen, this will be used to share the encryption exponent $s$. Now calculate $\lambda_i = \vec{v}\times M_i$ for $i=1$ to $l$, where $M_i$ is the $i$th row of $M$. $r_1,...,r_l \in \mathbb{Z}_p$ are chosen at random. The cipher text can then be published as, CT:\\
+    \centerline{$C=me(g,g)^{\alpha s},\hspace{1cm}C'=g^s,$}\\
+    \centerline{$(C_1=g^{a\lambda_1}H(p(1))^{-r_1}),...,(C_n=g^{a\lambda_n}H(p(1))^{-r_n})$}
+
+    \paragraph{Decryption} - Produces the plain text from the cipher text and an associated access structure using the private key for a set S of attributes. If the private key satisfies the access structure, let $I \subset \{1,2,...,l\}$ be defined 
+
+
+\caption{\gls{abe}, Waters\cite{abe_waters09}}
+\end{mdframed}
+\end{figure}
 
 \subsubsection{Setup}
 

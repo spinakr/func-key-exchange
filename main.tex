@@ -9,6 +9,9 @@
 \usepackage{pbox}
 \usepackage{minted}
 \usepackage{geometry}
+\usepackage{framed}
+\usepackage{mdframed}
+
 \makeglossaries
 
 
@@ -83,10 +86,10 @@
  }
  \renewcommand{\chaptername}{\appendixname}
 % include below possible appendices (chapters)
-\chapter{Client.py}
+ \chapter{Client.py}\label{clientcode}
 \lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\scriptsize]{server.py}
 
-\chapter{Server.py}
+\chapter{Server.py}\label{servercode}
 \lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\scriptsize]{client.py}
 
 \end{document} 
