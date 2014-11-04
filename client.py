@@ -14,13 +14,11 @@ def prompt() :
 
 
 def encapsulate(cpkey):
-    #can only encrypt group members, so sym key will be the hash of a group element.
     key = groupObj.random(GT)
-    print('Random group object  {} \n Policy: {}'.format(key, policy))
     return key, cpabe.encrypt(pk, key, policy)
 
-def xorString(a,b): #TODO: fix to be bitvise xor of strings, then convert back to string of length 16 bit
-    return a+b
+def xorString(s1,s2):
+    return ''.join(chr(ord(a) ^ ord(b)) for a,b in zip(s1,s2))     
 
 def generateSessionKey(encaps):
     key="asdfqqqqqqqqqqqq"
@@ -79,12 +77,9 @@ if __name__ == '__main__':
     print 'Connected to remote host. Uploading and downloading encapsulations'
     key, encap = encapsulate(cpkey)
     server.send(objectToBytes(encap, groupObj))
+    #server.send(objectToBytes(nickName,groupObj))
     print('Encaplsulation sent: {}'.format(encap))
-    #encapsulations = bytesToObject(server.recv(4096), groupObj)
-    #print('Encapsulations received: {}'.format(encapsulations))
-    #encapsulations=[]
     key = None
-#    key = generateSessionKey(encapsulations)[:16]
     AESobj = None 
 
 
@@ -119,14 +114,18 @@ if __name__ == '__main__':
                     print('Encapsulations received: {}'.format(len(encapsulations)))
                     
                     key = generateSessionKey(encapsulations)[-16:]
-                    print('Genmerated session key: {}'.format(key))
+                    print('Generated session key: {}'.format(key))
                     AESobj = AES.new(key, AES.MODE_CBC, 'This is an IV456')
+                    prompt()
 
                 else :
                     #print data
                     sender = data.split("]",1)[0] + "]"
                     msg = data.split("]",1)[1]
-                    sys.stdout.write(sender + "   " + decrypt(key, msg))
+                    if sender!='[server]':
+                        msg = sender + "   " + decrypt(key, msg)
+                    sys.stdout.write(msg) 
+                    sys.stdout.flush()
                     prompt()
              
             #user entered a message
