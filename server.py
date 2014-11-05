@@ -7,109 +7,114 @@ from charm.core.engine.util import objectToBytes,bytesToObject
 #Function to broadcast chat messages to all connected clients
 def broadcast (sock, message):
     #Do not send the message to master socket and the client who has send us the message
-    for socket in CONNECTION_LIST.keys():
+    for socket in userdata.keys():
         if socket != server_socket and socket != sock :
-        #if socket != server_socket:
             try :
+                time.sleep(0.1)
                 socket.send(message)
             except :
                 # broken socket connection may be, chat client pressed ctrl+c for example
                 socket.close()
-                if socket in CONNECTION_LIST:
-                    del CONNECTION_LIST[socket]
+                if socket in userdata:
+                    removeUser(sock)
+                      
+def handleNewConnection():
+    sockfd, addr = server_socket.accept()
+    userdata[sockfd] = 'Anonymous {}'.format(len(userdata))
+    #send the room policy
+    sockfd.send(roomPolicy)                                                     
+    #send pk and group
+    sockfd.send(objectToBytes(pk,groupObj))                                    
+    #send key using a attr set
+    sockfd.send(objectToBytes(cpabe.keygen(pk, msk, attr_dict[i]),groupObj))    
+    #receive the encapsulation
+    encap = bytesToObject(sockfd.recv(RECV_BUFFER), groupObj)                   
+    #save it
+    encapsulations.append(encap)                                                         
+    broadcastEncapList(sockfd, addr) 
+    broadcast(sockfd, "[server] {} entered room\n".format(userdata[sockfd]))
+    print 'Users in the room: {}\n\n'.format(str(userdata.values()))
 
+def broadcastEncapList(sockfd, addr):
+    broadcast(sock, "1000001"+str(len(encapsulations)))                         
+    time.sleep(1)
+    print "Client {}, on {} connected".format(userdata[sockfd], addr)           
+    for j in xrange(0,len(encapsulations)):
+        time.sleep(0.1)
+        broadcast(sock, objectToBytes(encapsulations[j], groupObj)) 
+        print('Send encapsulation number {} of {}'.format(j+1,len(encapsulations)))
 
 def removeUser(sock):
-    broadcast_data(sock, "Client (%s, %s) is offline" % addr)
-    print "Client (%s, %s) is offline" % addr
-    sock.close()
-    del CONNECTION_LIST[sock]
+    broadcast(sock, "[server] Client {} is offline\n".format(str(userdata[sock])))
+    print "Client {} left the room.".format(userdata[sock])
+    del userdata[sock]
+    broadcast(sock, "[server] Clients in the room:  {}\n".format(str(userdata.values())))
+    print "Clients in the room: {}\n\n".format(str(userdata.values()))
+        
 
+def processData():
+    try:
+        # receiving data from the socket.
+        data = sock.recv(RECV_BUFFER)
+        if data:
+            # there is something in the socket
+            broadcast(sock, "\r" + '[' + userdata[sock] + '] ' + data)  
+            return True
+        else:
+            # remove the socket that's broken    
+            if sock in userdata.keys():
+                removeUser(sock)
+            return True
+    except:
+        return False
 
-     
+def disconnected():
+    print "Unexpected error:", sys.exc_info()[0]
+    print 'Users in the room: {}'.format(str(userdata.values()))
+    broadcast(sock, "[server] Client {} is offline\n".format(userdata[sock]))
+
 if __name__ == '__main__':
-    attr_dict = [['THREE', 'ONE', 'TWO'], ['THREE', 'TWO', 'FOUR'], ['ONE', 'THREE', 'FOUR'], ['ONE', 'TWO', 'FIVE']]
+    attr_dict = [
+                ['THREE', 'ONE', 'TWO'],
+                ['THREE', 'TWO', 'FOUR'], 
+                ['ONE', 'THREE', 'FOUR'], 
+                ['ONE', 'TWO', 'FIVE']]
     i=0
-    groupObj = PairingGroup('SS512')
-
-    cpabe = abenc_waters09.CPabe09(groupObj)
-    (msk, pk) = cpabe.setup()
+    groupObj = PairingGroup('SS512') 
+    #Init the abe class
+    cpabe = abenc_waters09.CPabe09(groupObj)            
+    (msk, pk) = cpabe.setup()                            
+    #Run setup method
     roomPolicy = '((ONE or THREE) and (TWO or FOUR))'
 
-    # List to keep track of socket descriptors
-    CONNECTION_LIST = {}
-    #list of current encapsulations for the room
+    userdata = {} #list of sockets and chat names.
     encapsulations = []
-    RECV_BUFFER = 4096 # Advisable to keep it as an exponent of 2
+    RECV_BUFFER = 4096 
     PORT = 5000
 
-    #Setup key exchange socket and message socket     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(("0.0.0.0", PORT))
     server_socket.listen(10)
- 
+
     # Add server socket to the list of readable connections
-    CONNECTION_LIST[server_socket] = 'server'
+    userdata[server_socket] = ''
  
     print "Chat server started on port " + str(PORT)
- 
+    print "Current room policy: {}\n\n".format(roomPolicy)
+
+    #Start the server main loop 
     while 1:
-        # Get the list sockets which are ready to be read through select
-        read_sockets,write_sockets,error_sockets = select.select(CONNECTION_LIST,[],[])
-        
+        read_sockets,write_sockets,error_sockets = select.select(userdata,[],[])
         for sock in read_sockets:
             #New connection
             if sock == server_socket:
                 # Handle the case in which there is a new connection received through server_socket
-                sockfd, addr = server_socket.accept()
-                #CONNECTION_LIST.append(sockfd)
-                CONNECTION_LIST[sockfd] = 'anonymous{}'.format(len(CONNECTION_LIST))
-                sockfd.send(roomPolicy) #send the room policy
-                sockfd.send(objectToBytes(pk,groupObj))
-                sockfd.send(objectToBytes(cpabe.keygen(pk, msk, attr_dict[i]),groupObj))
-                print('USED ATTR SET # {}'.format(i))
+                handleNewConnection()
                 i+=1
-                encap = bytesToObject(sockfd.recv(RECV_BUFFER), groupObj) #receive the encapsulation
-                #nick = bytesToObject(sockfd.recv(RECV_BUFFER), groupObj) #receive the nick
-                encapsulations.append(encap) #add the encapsulation to current list
-                broadcast(sock, "1000001"+str(len(encapsulations)))
-                for j in xrange(0,len(encapsulations)):
-                    time.sleep(0.1)
-                    broadcast(sock, objectToBytes(encapsulations[j], groupObj)) #send all the current encapsulations
-                    print('Send encapsulation number {} of {}'.format(j+1,len(encapsulations)))
-                print "Client {} connected".format(addr)
-                 
-                broadcast(sockfd, "[server] {} entered room\n".format(CONNECTION_LIST[sockfd]))
-                print 'Users in the room: {}'.format(str(CONNECTION_LIST.values()))
-
             #Some incoming message from a client
             else:
                 # process data recieved from client, 
-                try:
-                    # receiving data from the socket.
-                    data = sock.recv(RECV_BUFFER)
-                    if data:
-                        # there is something in the socket
-                        #broadcast(sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)  
-                        broadcast(sock, "\r" + '[' + CONNECTION_LIST[sock] + '] ' + data)  
-                    else:
-                        # remove the socket that's broken    
-                        if sock in CONNECTION_LIST:
-                            del CONNECTION_LIST[sock]
-
-                        # at this stage, no data means probably the connection has been broken
-                        broadcast(sock, "[server] Client {} is offline\n".format(str(CONNECTION_LIST[sock])))
-                        time.sleep(0.1)
-                        broadcast(sock, "[server] Clients in the room:  {}\n".format(str(CONNECTION_LIST.values())))
-
-
-                # exception 
-                except:
-                    print "Unexpected error:", sys.exc_info()[0]
-                    print 'Users in the room: {}'.format(str(CONNECTION_LIST.values()))
-                        #broadcast(sock, "[server] Client {} is offline\n".format(CONNECTION_LIST[sockfd]))
-                    continue
-
+                processData() or disconnected()
      
     server_socket.close()
