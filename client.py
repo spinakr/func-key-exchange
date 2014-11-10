@@ -18,7 +18,7 @@ def xorString(s1,s2):
     return ''.join(chr(ord(a) ^ ord(b)) for a,b in zip(s1,s2))     
 
 def generateSessionKey(encaps):
-    key="asdfqqqqqqqqqqqq"
+    key=sha1(cpabe.decrypt(pk, cpkey, encaps.pop()))
     for encap in encaps:
         key = xorString(key,sha1(cpabe.decrypt(pk, cpkey, encap)))
     return key
@@ -55,17 +55,17 @@ def connect(server, port):
         sys.exit()
 
 def receiveEncapsulations() :
-    sys.stdout.write("\n\nReceived encapsulations ")
+    #sys.stdout.write("\n\nReceived encapsulations ")
     encapsulations = []
     for i in xrange(0,int(data[7])): 
         try: 
             encapsulations.append(bytesToObject(server.recv(4096), groupObj))
-            sys.stdout.write(str(i+1) + ", ")
+            #sys.stdout.write(str(i+1) + ", ")
         except:
             print("RECEIVE ENCAP EXCEPTION ON RUN # {}, RETRYING ONCE".format(i))
             encapsulations.append(bytesToObject(server.recv(4096), groupObj))
             continue
-    print('\nEncapsulations received: {}. Generating session key.'.format(len(encapsulations)))
+    print('\nEncapsulations received: {}. Generating session key.'.format(len(encapsulations)-1))
     return encapsulations 
 
 def printMessage(data):

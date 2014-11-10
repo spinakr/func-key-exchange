@@ -31,6 +31,7 @@ def handleNewConnection():
     encap = bytesToObject(sockfd.recv(RECV_BUFFER), groupObj)                   
     #save it
     encapsulations.append(encap)                                                         
+    entities.append(addr)
     broadcastEncapList(sockfd, addr) 
     broadcast(sockfd, "[server] {} entered room\n".format(userdata[sockfd]))
     print 'Users in the room: {}\n\n'.format(str(userdata.values()))
@@ -89,6 +90,7 @@ if __name__ == '__main__':
 
     userdata = {} #list of sockets and chat names.
     encapsulations = []
+    entities = []
     RECV_BUFFER = 4096 
     PORT = 5000
 
@@ -106,15 +108,10 @@ if __name__ == '__main__':
     #Start the server main loop 
     while 1:
         read_sockets,write_sockets,error_sockets = select.select(userdata,[],[])
-        for sock in read_sockets:
-            #New connection
-            if sock == server_socket:
-                # Handle the case in which there is a new connection received through server_socket
+        for sock in read_sockets: 
+            if sock == server_socket: #New connection
                 handleNewConnection()
                 i+=1
-            #Some incoming message from a client
-            else:
-                # process data recieved from client, 
+            else:   #Incoming message from a client
                 processData() or disconnected()
-     
     server_socket.close()
