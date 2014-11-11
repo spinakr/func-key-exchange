@@ -99,9 +99,9 @@ Now a user with either the "admin"-attribute or a set including "NTNU", "5th yea
 \end{itemize}
 
 
-Charm also include an implemented \gls{abe} scheme based on Waters\cite{abe_waters09}, which can be used to describe how the algorithms work. This construction will later be used in the implementation of a prototype attribute-based key exchange application. The implementations are written in python and are thus easily readable. A walkthrough of the \gls{abe} protocol using the implementation will be used to demonstrate the algorithms mentioned. The implementation and a sample run of the methods are included for each of the algorithms. \ref{fig:abe_math} describes the \gls{cpabe} scheme of Waters\cite{abe_waters09} from which the implementation is based. The two definitions can be followed in parallel and it is clearly seen that they in fact define the same thing, the mathematical presentation might be easier to follow as the symbols are more clear, while the python code use programmatic variable names. The important point to emphasis is that the code is based directly on the figure definition, and is provided to make the code easier to follow.
+Charm also include an implemented \gls{abe} scheme based on Waters\cite{abe_waters09}, which can be used to describe how the algorithms work. This construction will later be used in the implementation of a prototype attribute-based key exchange application. The implementations are written in python and are thus easily readable. A walkthrough of the \gls{abe} protocol using the implementation will be used to demonstrate the algorithms mentioned. The implementation and a sample run of the methods are included for each of the algorithms. Figure \ref{fig:abe_math} describes the \gls{cpabe} scheme of Waters\cite{abe_waters09} from which the implementation is based. The two definitions can be followed in parallel and it is clearly seen that they in fact define the same thing, the mathematical presentation might be easier to follow as the symbols are more clear, while the python code use programmatic variable names. The important point to emphasis is that the code is based directly on the figure definition, and is provided to make the code easier to follow.
 
-\begin{figure}\label{fig:abe_math}
+\begin{figure}
 \begin{mdframed}
 \paragraph{Setup} - Group $G$ of prime order $p$ is chosen from generator $g$. $\alpha, a \in \mathbb{Z}_p$ are generator at random. $H: \{0,1\}\* \rightarrow G$ is a hash function. The master public key is then $mpk = g, e(g,g)^{\alpha}, g^a$, where $e()$ is a pairing as described in \ref{subsec:lsss}. The master secret key is $msk = g^{\alpha}$.
 \
@@ -119,6 +119,7 @@ The access structure $(M,p)$ is attached to the cipher text as well.
 
 
 \caption{\gls{abe}, Waters\cite{abe_waters09}}
+\label{fig:abe_math}
 \end{mdframed}
 \end{figure}
 \subsubsection{Setup}
