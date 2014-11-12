@@ -8,25 +8,34 @@ Charm\cite{DBLP:Charm13} is a prototyping framework for cryptographic systems. I
 \section{Public Key Encryption}\label{sec:pke}
 Public key cryptography or asymmetric cryptography allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages. 
 \begin{itemize}
-\item Setup - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
-\item Encryption - takes the public key of the receiver as input together with the message, outputs a cipher text. Only the corresponding private key can decrypt.
-\item Decryption - uses the private key to decrypt the message.
+\item \textbf{Setup} - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
+\item \textbf{ Encryption } - takes the public key of the receiver as input together with the message, outputs a cipher text. Only the corresponding private key can decrypt.
+\item \textbf{ Decryption } - uses the private key to decrypt the message.
 \end{itemize}
 
 This setup can also be used to achieve message authentication using digital signatures. Either by the use of the same alogrithms as mentioned above or with separate ones besides these. A common problem with public key crypto systems is how you are supposed to trust that a given public key used to sign something really belongs to the claimed owner. This issue is normally dealt with using a trusted \gls{ca} issuing certificates binding a public key to a user identity. The \gls{ca} has a public/private key pair, which is used to sign certificates on request. Initially the \gls{ca} have to publish its public key together with a CA certificate. This is stored by in the browsers of users trusting it. A user will typically send a signed certificate request to the \gls{ca}, including the identity to be associated with the public key. The \gls{ca} verifies the request signature and produces a certificate which is signed using the \glspl{ca} own public key. When signing, the user will include this certificate as profe of his identity, which can be verified by anybody in possession of the \glspl{ca} public key and CA certificate. 
 
 
+\section{Linear Secret Sharing}\label{subsec:lsss}
+In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into $n$ pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Secret sharing is often used to store highly sensitive keys, typically private keys of a \gls{ca} or other keys which should not be assessible by a single user alone. For the cause of this project only \gls{lsss} is described as this is a key component in of the constructions used later. \paragraph{A linear secret sharing scheme}\cite{lsss}, defined by $(k,n)$, where $n$ are the number of shares and $k$ the threshold to allow recovery, are defined as following.\\
+\begin{itemize}
+\item \textbf{Setup} -  $A$ is a public $k\times n$ matrix with entries chosen from $F = \mathbb{Z}_m^*$ with generator $m$, a prime. $x=(x_1,x_2,\dots,x_t)^K$ is a secret vector from $F^k$. $a_{ij}$ is element at the $i$th row in the $j$th column of the matrix $A$.
+\item \textbf{Dealing phase} - A secret vector $x \in F^k$ where $x_1$ is the secret value, while the rest of the values are random from $F$. Each user get a share $y_i \in F$.
+\centerline{$y_i = a_{i1}x_1 + a_{i2}x_2 + \dots + a_{ik}x_k$}
+For the $(k,n)$ threshold system there will be $n$ such schemes and thus a $(n\times k)$ linear system $Ax=y$.
+The shares $y_i$ are sent to the users, while $A$ are made public.
+\item \textbf{Recovery phase} - Consist of solving a linear system of equations made of combining the users equations forming a matrix $A_U$ where $U = {u_1, \dots, u_k}$ is the users participating in the recovery. The solution is then found by solving 
+\centerline{$A_Ux=y_U$}, where $y_U$ is the vector of secrets of the users. The secret is found as the first coordinate of the solution.
+\end{itemize}
 
-\section{Secret Sharing}\label{sec:secret_sharing}
-In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into $n$ pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Shamir proposed a solution to this with his secret sharing scheme \cite{shamir_share}. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shadows, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shadows are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shadows we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
+\subsection{Secret Sharing}\label{sec:secret_sharing}
+ Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shadows, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shadows are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shadows we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
 
 \begin{equation}
  y(x) = m + a_1*x + a_2*x^2 + ... + a_{k-1} * x^{k-1} 
 \end{equation}\label{eq:polynom}
 
 
-\subsection{Linear Secret Sharing}\label{subsec:lsss}
-A \gls{lsss} ... \todo{write about linear secret sharing - used in the implementation of ABE in charm}
 
 \section{Pairing-based encryption}
 Let $G$ be a group of prime order $q$ with generator $g$. $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^x, b^y)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. These assumptions are used, and relied on, in earlier crypto systems. The systems explored in this project use pairing of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier.\todo{rewrite sentence} The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
