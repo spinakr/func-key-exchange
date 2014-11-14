@@ -46,6 +46,9 @@ In addition to this does much of the security of the system rely on the \gls{kms
 \end{figure}
 
 
+\subsection{Possible extensions and improvements}
+The most interesting extension to this system would be to remove the broadcast server completely and apply a peer-to-peer setup. The users would have to broadcast their encapsulations individually, the structure would look much like the one in group Diffie-Hellman as described in \ref{subsec:DH}. The users would need to have some way of knowing where to send their encapsulations, this could be solved by using multicast groups, which new users subscribes to, allowing them to receive new encapsulations, this would essentially be the same as the configuration used in this project. This setup would also require the users to negotiate the policy of the room without an intermediate server keeping track of this. 
+
 \newpage
 
 \section{Implementation}
