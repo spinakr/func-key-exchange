@@ -78,7 +78,7 @@
 *.ind
 *.ist
 
-Makefile
+#Makefile
 
 # minitoc
 *.maf

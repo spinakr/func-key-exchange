@@ -28,7 +28,7 @@ The shares $y_i$ are sent to the users, while $A$ are made public.
 \centerline{$A_Ux=y_U$}, where $y_U$ is the vector of secrets of the users. The secret is found as the first coordinate of the solution.
 \end{itemize}
 
-\subsection{Secret Sharing}\label{sec:secret_sharing}
+\subsection{Shamir Secret  Sharing}\label{sec:secret_sharing}
  Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shadows, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shadows are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shadows we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
 
 \begin{equation}
@@ -66,29 +66,31 @@ Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the
 \newpage
 Figure \ref{fig:ibenc} demonstrate a \gls{ibe} scheme from the Charm framework and the implementation described by Waters\cite{ibe_waters09}.
 
-\begin{figure}[H]
-\begin{lstlisting}[language=bash, frame=single, breaklines=true ]
 
-1 >>> from charm.toolbox.pairinggroup import PairingGroup, GT
-2 >>> from charm.schemes.ibenc.ibenc_waters09 import DSE09
-3 >>> group = PairingGroup('SS512')
-4 >>> ibe = DSE09(group)
-5 >>> mpk, msk = ibe.setup()
-6 >>> ID = "student@stud.ntnu.no"
-7 >>> secret_key = ibe.keygen(mpk, msk, ID)
-8 >>> msg = group.random(GT)
-9 >>> ct = ibe.encrypt(mpk, msg, ID)
-10>>> decrypted_msg = ibe.decrypt(ct, secret_key)
-11>>> msg == decrypted_msg
-12True
-13>>> 
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\begin{figure}[H]
+\begin{lstlisting}[language=bash, xleftmargin=2em, frame=single, framexleftmargin=1.5em, breaklines=true, numbers=left, numbersep=5pt, numberstyle=\tiny\color{mygray}]
+
+>>> from charm.toolbox.pairinggroup import PairingGroup, GT
+>>> from charm.schemes.ibenc.ibenc_waters09 import DSE09
+>>> group = PairingGroup('SS512')
+>>> ibe = DSE09(group)
+>>> mpk, msk = ibe.setup()
+>>> ID = "student@stud.ntnu.no"
+>>> secret_key = ibe.keygen(mpk, msk, ID)
+>>> msg = group.random(GT)
+>>> ct = ibe.encrypt(mpk, msg, ID)
+>>> decrypted_msg = ibe.decrypt(ct, secret_key)
+>>> msg == decrypted_msg
+True
+>>> 
 
 \end{lstlisting}
 \caption{Demo run of identity-based encryption from Charm.}
 \label{fig:ibenc}
 \end{figure}
 
-First the required dependencies are imported from the Charm toolbox, in this example the pairing group and the \gls{ibe} class. On line 3 the pairing group is initiated with a elliptic curve with a 512-bit base - thus "SS512". Next the class object is initiated using the previously created group object. Line 5 to 12 demonstrate a \gls{ibe} cycle with setup, keygen, encryption and decryption.
+First the required dependencies are imported from the Charm toolbox, in this example the pairing group and the \gls{ibe} class. On line 4 the pairing group is initiated with a elliptic curve with a 512-bit base - thus "SS512". Next the class object is initiated using the previously created group object. Line 6 to 13 demonstrate a \gls{ibe} cycle with setup, keygen, encryption and decryption.
 Notice that anybody can encrypt a message for any user without having a public key stored locally, we simply use the master public key together with the identity of the recipient. This removes a lot of overhead known from \gls{pki}, we now only need one public key for each domain. \Gls{ibe} is a somewhat more intuitive scheme, since the identity of the recipients is used as the public key, thus no connection between different public keys and user identities have to be stored.
 
 \subsection{Attribute-based encryption}\label{subsec:ABE}
@@ -349,9 +351,9 @@ A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption
 \subsection{Key encapsulation mechanism}
 \Gls{kem} \cite{kem_kurosawaP14} is a technique where a random key $K$ is generated together with its encryption $C$ - the encapsulation. This is useful for distribution of symmetric keys that can be used again to generate session keys for two or several parties, depending on the encapsulation mechanism. A \gls{kem} consists of three algorithms:
 \begin{itemize}
-\item Key generation - generation of the symmetric key used by the \gls{dem}.
-\item Encryption - used to encrypt the generated key, usually using some public key.
-\item Decryption - reveals the symmetric key from the encapsulation.
+\item \textbf{ Key generation } - generation of the symmetric key used by the \gls{dem}.
+\item \textbf{ Encryption } - used to encrypt the generated key, usually using some public key.
+\item \textbf{ Decryption } - reveals the symmetric key from the encapsulation.
 \end{itemize}
 
 This configuration will be used when constructing key exchange schemes using both \gls{ibe} and \gls{abe}. Hybrid encryption schemes are basically doing key exchange. The focus will be on the setting with several users doing key exchange, a sollution is then to use a hybrid scheme to exchange encapsulations of randomly generated symmetric keys which can be combined to one sessions key. This session key can then be used by the \gls{dem} to communicate securly.
