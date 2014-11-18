@@ -76,6 +76,9 @@
 \bibliographystyle{plain}
 \bibliography{references/func-key-exchange}
 
+
+
+\definecolor{mygray}{rgb}{0.95, 0.95, 0.96}
 %% Uncomment the following if you have any appendix
  \appendix
  \addtocontents{toc}{%
@@ -86,7 +89,7 @@
  \renewcommand{\chaptername}{\appendixname}
 % include below possible appendices (chapters)
  \chapter{Client.py}\label{clientcode}
-\lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\small]{server.py}
+\lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\small,backgroundcolor=\color{mygray}]{server.py}
 
 \chapter{Server.py}\label{servercode}
 \lstinputlisting[language=Python, breaklines=true, tabsize=2, showspaces=false,keywordstyle=\color{green}, basicstyle=\small]{client.py}

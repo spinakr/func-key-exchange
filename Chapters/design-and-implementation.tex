@@ -2,8 +2,18 @@
 This chapter suggests a prototype implementation of one possible application, based on the principles and ideas in the previous two sections. The protocol structure will be displayed, together with examples from the code and test runs using the system.
 
 \section{System specifications}\label{sec:chat}
-As mentioned in \ref{sec:apps} there are several scenarios where functional key exchange can provide security and privacy. This section will describe the structure and specifications for a chat system utilizing \gls{abake} as described in \ref{sec:abake} and  supported by Wang et al.\cite{DBLP:abake}. The system consists of a set of clients running a client application and a broadcast server. It could easily have been altered to support peer-to-peer, since the server only acts as a intermediate for broadcasting, caching of encapsulations and policy management. The system shown is meant to be a proof of concept for how this kind of application could look, it is thus simplified to some extent. Most of the data used are static to abstract away difficulties with administration of rooms and related policies, as well as key management. The implementation will not address key distribution, therefore a key is given to the users on connection. The extended system would include a separate \gls{kms} which the users would register with to obtain their key. The best solution would probably be to have a separate virtual or physical server doing each task; attribute and key management, storage and distribution of keying material, broadcasting of chat messages/cipher texts. Other features like being able to create your own rooms and administrate these would also be logical. This prototype will be a single room with a static policy.
+As mentioned in \ref{sec:apps} there are several scenarios where functional key exchange can provide security and privacy. This section will describe the structure and specifications for a chat system utilizing \gls{abake} as described in \ref{sec:abake} and  supported by Wang et al.\cite{DBLP:abake}. The system consists of a set of clients running a client application and a broadcast server. It could easily have been altered to support peer-to-peer, since the server only acts as a intermediate for broadcasting, caching of encapsulations and policy management. The system shown is meant to be a proof of concept for how this kind of application could look, it is thus simplified to some extent. Most of the data used are static to abstract away difficulties with administration of rooms and related policies, as well as key management. The implementation will not address key distribution, therefore a key is given to the users on connection. The extended system would include a separate \gls{kms} which the users would register with to obtain their key. The best solution would probably be to have a separate virtual or physical server doing each task; attribute and key management, storage and distribution of keying material, broadcasting of chat messages/cipher texts. Figure \ref{fig:improved} shows how the extended system would look on a high level. Other features like being able to create your own rooms and administrate these would also be logical, and would have to be stored and handled somewhere. The prototype presented here will be a single room with a static policy.
+
+\begin{figure}[h]
+\centering
+\includegraphics[trim=0cm 0cm 0cm 0cm, scale=0.8]{complete-system.pdf}
+\caption{Improved system architecture}
+\label{fig:improved}
+\end{figure}
+
+
 \paragraph{The most important feature} of the system is to provide encrypted communication between users who satisfy the room policy. The users should obtain a shared session key through \gls{abake}. This way we assure implicit authentication of all users taking part in the conversation. A user should be able to participate in the exchange without ever having to provide an identity. It is assumed that all users have registered with some \gls{kms} prior to the key exchange - a user would typically register a set of attributes which would have to be approved by the system authority before issuing the key. When new users join, they should be able to upload their contribution and receive the rest of the keying material from the server; the users will then have to compute the new session key from the encapsulations. After exchanging keys, the users should be able to use it to encrypt the chat messages. It should be noted that anybody can in fact upload a contribution and receive encapsulations, but only the ones with the correct attributes can decapsulate and produce the session key. It might be smart for the server to challenge the new user to prove that he has the correct attributes. The server could require that new users prove that they have the correct attributes before being able to upload, to avoid flooding of the storage. This extension would simply mean the server challenging the new user with an encrypted nonce which the user would have to decrypt and send back. This mechanism was not included in this implementation as this project focus on demonstrating the key exchange process, and since this possible weakness not pose any threats to the integrity of the system it is not prioritized. 
+
 
 
 \section{Models and construction}
@@ -14,7 +24,7 @@ The high level construction of the key exchange used in the system is based on t
 
 \begin{figure}[H]
 \centering
-\includegraphics[trim=2cm 2cm 0cm 1cm ,scale=1]{Flow.pdf}
+\includegraphics[trim=1cm 2cm 0cm 9cm ,scale=0.9]{Flow.pdf}
 \caption{System flow.}
 \label{fig:flow}
 \end{figure}
@@ -22,7 +32,7 @@ The high level construction of the key exchange used in the system is based on t
 
 \begin{figure}[H]
 \centering
-\includegraphics[trim=2cm 1.5cm 2cm 4cm ,scale=1]{chatsystem.pdf}
+\includegraphics[trim=1cm 1.5cm 2cm 4cm ,scale=0.9]{chatsystem.pdf}
 \caption{Distribution of encapsulations}
 \label{fig:encapdistr}
 \end{figure}
@@ -62,30 +72,29 @@ This system does not provide forward secrecy, since any user with the correct at
 \subsection{Possible extensions and improvements}
 The most interesting extension to this system would be to remove the broadcast server completely and apply a peer-to-peer setup. The users would have to broadcast their encapsulations individually, the structure would look much like the one in group Diffie-Hellman as described in \ref{subsec:DH}. The users would need to have some way of knowing where to send their encapsulations, this could be solved by using multicast groups, which new users subscribes to, allowing them to receive new encapsulations, this would essentially be the same as the configuration used in this project. This setup would also require the users to negotiate the policy of the room without an intermediate server keeping track of this. To avoid pauses in the communication, the key exchange could be done in parallel while still using the old key, change to the new one when finished. 
 
-\newpage
 
 \section{Implementation}
 The application will consist of two components, one server class and one client class. The implementations of these follow the state diagrams \ref{fig:server-state} and \ref{fig:client-state} respectively. This section will describe how these two classes are implemented, the complete implementation including the code is attached in appendix \ref{clientcode} and \ref{servercode}. The state diagrams represents exactly how the programs work together, the send and receive actions in the diagram represent sockets in the application, and the loop binding it together is equal to the main loops of each class. This eventually mean that a send in the figure have a corresponding socket.send() in the code.
 
-\begin{figure}
+\begin{figure}[H]
 \centering
-\includegraphics[trim=2cm 1.5cm 2cm 4cm ,scale=1]{server-state.pdf}
+\includegraphics[trim=1cm 0cm 2cm 4cm ,scale=0.9]{server-state.pdf}
 \caption{Internal flow of the server class}
 \label{fig:server-state}
 \end{figure}
 
 
-\begin{figure}
+\begin{figure}[H]
 \centering
-\includegraphics[trim=0cm 11cm 0cm 0cm, scale=1]{client-state.pdf}
+\includegraphics[trim=0cm 11cm 0cm 0cm, scale=0.9]{client-state.pdf}
 \caption{Internal flow of the client class}
 \label{fig:client-state}
 \end{figure}
 
 \section{System demonstration}
-This section will demonstrate how the system looks in practice, figure \ref{fig:server-output} and \ref{fig:client12-output} shows how the system acts from the perspective of the server and from the clients, respectively. 
+This section will demonstrate how the system looks in practice, figure \ref{fig:server-output}, \ref{fig:client1-output} and \ref{fig:client2-output} shows how the system acts from the perspective of the server and from the clients, respectively. 
 \begin{itemize}
-\item First the server is started with a preset policy as highlighted in \ref{fig:server-output}, then two users join in succession, it can be seen that for each new user encapsulations are broadcast. The clients that connect can be observed in \ref{fig:client12-output} - when starting the client program, it will automatically try connecting to the server on address given as argument to the program. 
+\item First the server is started with a preset policy as highlighted in \ref{fig:server-output}, then two users join in succession, it can be seen that for each new user encapsulations are broadcast. The clients that connect can be observed in \ref{fig:client1-output} and \ref{fig:client2-output}  - when starting the client program, it will automatically try connecting to the server on address given as argument to the program. 
 \item After connecting, the server will start by sending the room policy and setup the user with a attribute key and the public parameters, as discussed earlier this is done to abstract away the problem of key distribution. It would also be more complicated to keep the keys persistent, since it would have to be stored somewhere locally, on a deployed system these keys would be in the user data of each registered user. 
 \item After receiving the policy, the client uploads his encapsulation and we can see that he receives the current set from the server - which in the case of one user only is his own, which he already have. 
 \item When the second user joins it can be seen that the first user generates a new key which is the same as the one generated at the second user. The messages are now encrypted using this key.
@@ -94,42 +103,83 @@ This section will demonstrate how the system looks in practice, figure \ref{fig:
 \paragraph{Usability}
 
 
+\definecolor{mygray}{rgb}{0.95, 0.95, 0.96}
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{server.png}
-\caption{Server output}
+\begin{lstlisting}[breaklines=true, backgroundcolor=\color{mygray} ]
+andkof@anders-s9:~/code/attr-chat$ python server.py 
+Chat server started on port 5000
+Current room policy: ((ONE or THREE) and (TWO or FOUR))
+
+
+Client Anonymous 1, on ('127.0.0.1', 43578) connected
+Send encapsulation number 1 of 1
+Users in the room: ['Anonymous 1', '']
+
+
+Client Anonymous 2, on ('127.0.0.1', 43580) connected
+Send encapsulation number 1 of 2
+Send encapsulation number 2 of 2
+Users in the room: ['Anonymous 2', 'Anonymous 1', '']
+
+
+Client Anonymous 2 left the room.
+Clients in the room: ['Anonymous 1', '']
+
+\end{lstlisting}
+\caption{Server interface}
 \label{fig:server-output}
 \end{figure}
 
 
 \begin{figure}
 \centering
-\begin{lstlisting}
-andkof@anders-s9:~/code/attr-chat$ python server.py 
-Chat server started on port 5000
-Current room policy: ((ONE or THREE) and (TWO or FOUR))
+\begin{lstlisting}[breaklines=true, backgroundcolor=\color{mygray} ]
+andkof@anders-s9:~/code/attr-chat$ python client.py localhost 5000
+Chat name: (leave blank to be completely anonymous) 
 
+Received room policy from server: 
+((ONE or THREE) and (TWO or FOUR))
+Key attributes:  [u'THREE', u'ONE', u'TWO']
+Connected to remote host. Uploading and downloading encapsulations
 
-Client Anonymous 1, on ('127.0.0.1', 42480) connected
-Send encapsulation number 1 of 1
-Users in the room: ['Anonymous 1', '']
-
-
-Client Anonymous 2, on ('127.0.0.1', 42484) connected
-Send encapsulation number 1 of 2
-Send encapsulation number 2 of 2
-Users in the room: ['Anonymous 2', 'Anonymous 1', '']
+Encapsulations received: 0. Generating session key.
+Generated session key: 96cc1a71acf66c2c
+<You> 
+Encapsulations received: 1. Generating session key.
+Generated session key: 75f2>f141k54c7jf 
+<You>  Anonymous 2 entered room
+<You> Hello, I'm #1.
+[Anonymous 2]   Hi there, this is #2.
+<You>  Client Anonymous 2 is offline
+<You>  Clients in the room:  ['Anonymous 1', '']
+<You> 
 
 \end{lstlisting}
-\caption{Client 1 and 2 output}
-\label{fig:client12-output2}
+\caption{Client 1 UI}
+\label{fig:client1-output}
 \end{figure}
-
 
 
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{client1and2.png}
-\caption{Client 1 and 2 output}
-\label{fig:client12-output}
+\begin{lstlisting}[breaklines=true, backgroundcolor=\color{mygray} ]
+andkof@anders-s9:~/code/attr-chat$ python client.py localhost 5000
+Chat name: (leave blank to be completely anonymous) 
+
+Received room policy from server: 
+((ONE or THREE) and (TWO or FOUR))
+Key attributes:  [u'THREE', u'TWO', u'FOUR']
+Connected to remote host. Uploading and downloading encapsulations
+
+Encapsulations received: 1. Generating session key.
+Generated session key: 75f2>f141k54c7jf
+[Anonymous 1]   Hello, I'm #1.
+<You> Hi there, this is #2.
+
+KeyboardInterrupt
+\end{lstlisting}
+\caption{Client 2 UI}
+\label{fig:client2-output}
 \end{figure}
+
