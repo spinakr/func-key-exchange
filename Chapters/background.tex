@@ -179,7 +179,7 @@ The class in figure \ref{code:setupfunc} is demonstrated in figure \ref{fig:setu
 \begin{figure}[H]
 \begin{minted}[frame=single]
 {python}
-def keygen(self, mpk, msk, attributes):        
+def keygen(self, pk, msk, attributes):        
     t = group.random()
     K = msk['g2^alpha'] * (pk['g2^a'] ** t)
     L = pk['g2'] ** t
