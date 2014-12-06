@@ -15,10 +15,10 @@ The high level construction of the key exchange used in the system is based on t
 \par When a new user joins, the message exchanges are paused until the new key is calculated by all users. Figure \ref{fig:flow} shows the system flow when a new user connects. A client will first query the server for the room policy, before an encapsulation is generated from the received policy and the public parameters. The encapsulation is sent to the server which distributes it so that all users have all contributions. Now the users will start using the session key to encrypt the chat messages and the server will go back to being a pure broadcast server for the now encrypted chat messages. 
 \par Figure \ref{fig:encapdistr} illustrates the encapsulation distribution process. Bob is a new user, so he uploads his contribution to the server, there are $n$ users already in the system. Next the server broadcast Bob's encapsulation to the current users, before sending the set of active encapsulations to Bob. After obtaining all encapsulations, all users initiate the key generation procedure, as shown in figure \ref{fig:keygen}, which consist of decapsulating the encapsulations, then using the symmetric keys with a pseudo random function on a session id, finally combining them using bitwise xor. For the pseudo random function keyed hmac from the python library is used. The session id is the concatenation of the socket addresses of each user, as for the presented implementation these addresses are sent from the server together with the encapsulations, but if the system was to be extended to a peer-to-peer configuration, each encapsulation would be sent individually from different addresses and could be obtained by the users directly. 
 
-
+\newpage
 \begin{figure}[H]
 \centering
-\includegraphics[trim=1cm 2cm 0cm 9cm ,scale=0.9]{Flow.pdf}
+\includegraphics[trim=1cm 2cm 0cm 3cm ,scale=0.9]{Flow.pdf}
 \caption{System flow.}
 \label{fig:flow}
 \end{figure}
@@ -66,7 +66,7 @@ This system does not provide forward secrecy, since any user with the correct at
 \subsection{Possible extensions and improvements}
 The extended system would include a separate \gls{kms} which the users would register with to obtain their key. The best solution would probably be to have a separate virtual or physical server doing each task; attribute and key management, storage and distribution of keying material, broadcasting of chat messages/cipher texts. Figure \ref{fig:improved} shows how the extended system would look on a high level. Other features like being able to create your own rooms and administrate these would also be logical, and would have to be stored and handled somewhere. The prototype presented here will be a single room with a static policy.
 
-\begin{figure}[h]
+\begin{figure}
 \centering
 \includegraphics[trim=0cm 0cm 0cm 0cm, scale=0.8]{complete-system.pdf}
 \caption{Improved system architecture}
@@ -81,7 +81,7 @@ Another interesting extension to the system would be to remove the broadcast ser
 \section{Implementation}
 The application will consist of two components, one server class and one client class. The implementations of these follow the state diagrams \ref{fig:server-state} and \ref{fig:client-state} respectively. This section will describe how these two classes are implemented, the complete implementation including the code is attached in appendix \ref{clientcode} and \ref{servercode}. The state diagrams represents exactly how the programs work together, the send and receive actions in the diagram represent sockets in the application, and the loop binding it together is equal to the main loops of each class. This eventually mean that a send in the figure have a corresponding socket.send() in the code.
 
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[trim=1cm 0cm 2cm 4cm ,scale=0.9]{server-state.pdf}
 \caption{Internal flow of the server class}
@@ -89,7 +89,7 @@ The application will consist of two components, one server class and one client 
 \end{figure}
 
 
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[trim=0cm 11cm 0cm 0cm, scale=0.9]{client-state.pdf}
 \caption{Internal flow of the client class}

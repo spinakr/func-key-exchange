@@ -1,5 +1,249 @@
 \chapter{Functional Key Exchange}\label{chp:funckeyenc} 
-When communicating on the Internet it is important to control what entities have access to the messages. In most cases it is important that the users can trust that the their communication cannot be stolen or eavesdropped on. Encryption is used to secure communication, to do this efficiently a shared key is usually needed. Functional key exchange is in our context defined as a set of key exchange mechanisms using some function to decided if a participant should be allowed to take part in, or be allowed access to, the key exchange. The functions will use some arguments as input and based on these decide if the session key should be output or not. This chapter will explain some proposed schemes trying to adapt this idea, then further explore possibly useful application areas and ideas. \Gls{ibake} and \gls{abake} are both examples of functional key exchange, with the latter being a generalization of the former. Since \gls{abake} will be used in the implementation later, this chapter will only introduce the basic ideas and principles with the implementation providing a more in depth description.
+When communicating on the Internet it is important to control what entities have access to the messages. In most cases it is important that the users can trust that the their communication cannot be stolen or eavesdropped on. Encryption is used to secure communication, to do this efficiently a shared key is usually needed. Functional key exchange is in our context defined as a set of key exchange mechanisms using some function to decided if a participant should be allowed to take part in, or be allowed access to, the key exchange. The functions will use some arguments as input and based on these decide if the session key should be output or not. This chapter will explain some proposed schemes trying to adapt this idea, then further explore possibly useful application areas and ideas. \Gls{ibake} and \gls{abake} are both examples of functional key exchange, with the latter being a generalization of the former. Since \gls{abake} will be used in the implementation later, this chapter will only introduce the basic ideas and principles with the implementation providing a more in depth description. The implementation of \gls{abake} is created using \gls{abe} as the \gls{kem}, \gls{abe} will therefor be explained and demonstrated in the beginning of this chapter. The \gls{abe} implementation from Charm, as used later in the implementation, is described and demonstrated in the beginning of the chapter, before moving on to the key exchange schemes. The theory of \gls{abe} is first described, then the implementation of it is used to showcase how it works in practice. 
+
+
+\section{Attribute-based encryption}\label{subsec:ABE}
+
+Attribute-based encryption as explained by Goyal et al. \cite{ABE} introduce an encryption scheme based on user attributes, from which the secret key is generated. This is similar to \gls{ibe}, but with the possibility of more than one "ID". Messages are encrypted using a access policy of several attributes, and only keys satisfying the access structure can decrypt the cipher text. This is typically useful in cases where the encryptor does not care about who decrypts as long as they satisfy the correct attributes or a set of them. Each user will have a private key corresponding to his set of attributes, in each domain. When encrypting, the policy is specified, this is typically a access tree where the attributes required are leaf nodes and internal nodes are "AND" or "OR"-gates. Different combinations of attributes may therefore be able to decrypt. The logical gates can be used to construct threshold requirements, where we require $k$ out of $n$ attributes. The encryptor can in example encrypt a message with the policy\\ \centerline{("NTNU" and "5th year" and Telematics dpmt.) or} \\ \centerline{("Professor" and "Telematics dpmt.") or "admin"}
+Now a user with either the "admin"-attribute or a set including "NTNU", "5th year" and "Telematics dpmt" would be able to decrypt. A user can thus create access structures allowing his id or some combination of other attributes to decrypt without having the attributes himself. It is worth noticing that \gls{abe} is a generalization of \gls{ibe} since an identity can be used as an attribute. The algorithm  have a similar structure as the one in \gls{ibe} (\ref{subsec:IBE}).
+
+\begin{itemize}
+\item \textbf{ Setup } - Taking some security parameters $1^k$ a master public/secret key pair $(mpk, msk)$ are generated.
+\item \textbf{ Key generation } - Using $mpk$, $msk$ and some $S$ describing the set of attributes - generates a $sk$ for the specific attribute combination. 
+\item \textbf{ Encryption } - Encrypts a message $m$ using $mpk$ and an access structure $A$ describing the policy of the encryption. The attributes in the access structure will define who's able to decrypt. 
+\item \textbf{ Decryption } - Decrypts cipher text $ct$ using $sk$ corresponding to an attribute set $S$, obtaining $m$. 
+\end{itemize}
+
+
+Charm also include an implemented \gls{abe} scheme based on Waters\cite{abe_waters09}, which can be used to describe how the algorithms work. This construction will later be used in the implementation of a prototype attribute-based key exchange application. The implementations are written in python and are thus easily readable. A walkthrough of the \gls{abe} protocol using the implementation will be used to demonstrate the algorithms mentioned. The implementation and a sample run of the methods are included for each of the algorithms (the memory references are removed to make it more compact). Figure \ref{fig:abe_math} describes the \gls{cpabe} scheme of Waters\cite{abe_waters09} from which the implementation is based. The two definitions can be followed in parallel and it can be seen that they in fact define the same thing, the mathematical presentation might be easier to follow as the symbols are more clear, while the python code use programmatic variable names. The important point to emphasis is that the code is based directly on the figure definition, which is provided to make the code easier to follow.
+
+\clearpage
+
+\begin{figure}
+\begin{mdframed}
+\paragraph{Setup} - Group $G$ of prime order $p$ is chosen from generator $g$. $\alpha, a \in \mathbb{Z}_p$ are generated at random. $H: \{0,1\}\* \rightarrow G$ is a hash function. The master public key is then $mpk = g, e(g,g)^{\alpha}, g^a$, where $e()$ is a pairing function as described in \ref{subsec:lsss}. The master secret key is $msk = g^{\alpha}$.
+\
+\paragraph{Key generation} - takes $msk$ and a set $S$ of attributes as arguments and randomly chose $t \in \mathbb{Z}_p$. The constructed private key is then \\ \centerline{$K = g^{\alpha}g^{at}\hspace{1cm} L = g^t \hspace{1cm}   \forall x\in S, K_x = H(x)^t$}.
+\\
+\paragraph{Encryption} - Takes $mpk$ and a message $m$ as arguments, together with a access structure $(M,p)$ where $M$ is an $l\times n$ matrix and $p$ is a function associating rows in M with attributes. A random vector $\vec{v} = (s, y_2, ..., y_n)\in \mathbb{Z}_p^n$ is chosen, this will be used to share the encryption exponent $s$. Now calculate $\lambda_i = \vec{v} M_i$, for $i=1$ to $l$, where $M_i$ is the $i$th row of the matrix $M$. $r_1,\dots,r_l \in \mathbb{Z}_p$. The cipher text is then ct = \\
+\centerline{$C=me(g,g)^{\alpha s}$, $C'=g^s$,}
+\centerline{($C_1 = g^{\alpha \lambda_1} H(p(1))^{-r_1}, D_1=g^{r_1}$,$\dots$,$C_n = g^{\alpha \lambda_n} H(p(n))^{-r_n}, D_n=g^{r_n}$)}.
+The access structure $(M,p)$ is attached to the cipher text as well.
+\\
+\paragraph{Decryption} - Recovers the plain text from a cipher text for a access structure, using private key corresponding to attribute set S. Let $I \subset \{1,2,\dots,l\}$ be defined as $I = \{i : p(i) \in S\}$. Then, chose $\{\omega \in \mathbb{Z}_p\}_{i\in I}$ so that if $\{\lambda_i\}$ are valid shares of a secret with access matrix $M$, then $\sum_{i\in I}\omega_i \lambda_i = s$. Now the algorithm computes
+\centerline{$\frac{C',K }{\prod_{i\in I}(e(C_i,L)e(D_i,K_{p(i)}))^{\omega_i}} = \frac{e(g,g)^{\alpha s}e(g,g)^{ast}}{(\prod_{i\in I}e(g,g)^{ta\lambda_i\omega_i})}=e(g,g)^{\alpha s}$}
+\centerline{We have from the encryption method that $C=me(g,g)^{\alpha s}$, }
+\centerline{and $m$ can thus be dived out.}
+
+\caption{\gls{abe}, Waters\cite{abe_waters09}}
+\label{fig:abe_math}
+\end{mdframed}
+\end{figure}
+
+\clearpage
+\subsubsection{Setup}
+\begin{figure}[h]
+\begin{minted}[frame=single]
+{python}
+def setup(self):
+    g1, g2 = group.random(G1), group.random(G2)
+    alpha, a = group.random(), group.random()        
+    e_gg_alpha = pair(g1,g2) ** alpha
+    msk = {'g1^alpha':g1 ** alpha, 'g2^alpha':g2 ** alpha} 
+    pk = {'g1':g1, 'g2':g2, 'e(gg)^alpha':e_gg_alpha, 
+    'g1^a':g1 ** a, 'g2^a':g2 ** a}
+    return (msk, pk)
+\end{minted}
+\caption{\Gls{abe} setup function}
+\label{code:setupfunc}
+\end{figure}
+
+\begin{figure}[h]
+\begin{lstlisting}[language=bash, frame=single, breaklines=true ]
+>>> from charm.toolbox.pairinggroup import PairingGroup,ZR,
+    G1,G2,GT,pair
+>>> from charm.schemes.abenc.abenc_waters09 import CPabe09
+>>> groupObj = PairingGroup('SS512')
+>>> cpabe = CPabe09(groupObj)
+>>> (msk, mpk) = cpabe.setup()
+>>> print msk
+    {'g1^alpha': <pairing.Element object at 0x>, 
+    'g2^alpha': <pairing.Element object at 0x>}
+>>> print pk
+    {'g1^a': <pairing.Element object at 0x>, 
+    'g2^a': <pairing.Element object at 0x>, 
+    'g2': <pairing.Element object at 0x>, 
+    'g1': <pairing.Element object at 0x>, 
+    'e(gg)^alpha': <pairing.Element object at 0x>}
+>>>
+\end{lstlisting}
+\caption{Demo running the setup function}
+\label{fig:setupfunc}
+\end{figure}
+
+The class in figure \ref{code:setupfunc} is demonstrated in figure \ref{fig:setupfunc}. The environment from which the methods are run have defined an elliptic curve with bilinear mapping. The pairing $e(g_1,g_2)$  correspond to $e(g,g)$ in \ref{fig:abe_math}.  The master public and private key pair is stored locally at a server acting as a \gls{kms}. After initializing the protocol we can generate a secret key using a defined set of attributes. For this we have the key generation method as following. This will be used by the \gls{kms} to generate secret keys for users in the protocol. How these keys are distributed is a separate concern which is not dealt with in this report. It is demonstrated how the keys are generated but now how they are distributed to the correct users. It is assumed that each user can receive their key securely from the \gls{kms}, and trust if to be reliable.
+
+\clearpage
+\subsubsection{Key Generation}
+\begin{figure}[H]
+\begin{minted}[frame=single]
+{python}
+def keygen(self, pk, msk, attributes):        
+    t = group.random()
+    K = msk['g2^alpha'] * (pk['g2^a'] ** t)
+    L = pk['g2'] ** t
+    k_x = [group.hash(unicode(s), G1) ** t for s in attributes]
+    
+    K_x = {}
+    for i in range(0, len(k_x)):
+        K_x[ attributes[i] ] = k_x[i]    
+
+    attributes = [unicode(a) for a in attributes]
+
+    key = { 'K':K, 'L':L, 'K_x':K_x, 'attributes':attributes }
+    return key
+
+\end{minted}
+\caption{\Gls{abe} key generation function}
+\label{code:keygenfunc}
+\end{figure}
+
+\begin{figure}[H]
+\begin{lstlisting}[language=bash, frame=single, breaklines=true ]
+>>> attr_list = ['THREE', 'ONE', 'TWO']
+>>> secret_key = cpabe.keygen(pk, msk, attr_list)
+>>> print secret_key
+    {'K_x': {'TWO': <pairing.Element object at 0x>, 
+             'THREE': <pairing.Element object at 0x>, 
+             'ONE': <pairing.Element object at 0x>}, 
+     'K': <pairing.Element object at 0x0>, 
+     'L': <pairing.Element object at 0x>, 
+     'attributes': [u'THREE', u'ONE', u'TWO']}
+>>> 
+\end{lstlisting}
+\caption{Demo running the key generation function}
+\label{fig:keygenfunc}
+
+\end{figure}
+
+The secret key includes a list of all the attributes with a corresponding hash value raised to the power of a random value $t \in \mathbb{Z}_p$. Additionally a list of the unicode representations of the attributes are added - this will later be used when decrypting, to check if a given key comply with the policy given in the cipher text. The list of attributes for the secret key are compared with the attributes in the access structure before decrypting,this way we avoid actually trying to decrypt if the key doesn't contain the correct attributes. The public parameters in $pk$ must be published together with the secret keys, so that each user have a key pair consisting of their personal secret key, and the master public key. A major problem when doing \gls{abe} is preventing collusion attacks, where a group of users try to combine their attributes trying to satisfy a more restrictive access structure then what their individual sets of attributes allow. This construction avoids this by randomizing each key with a generated exponent $t$. When decrypting, each share will have this $t$ in the exponent, which is supposed to bind the components of each key together. Combining two keys would have the value of $t$ different so they would not work together.  During decryption these shares are only relevant to the particular key used in that exact run of the decryption algorithm.
+
+
+\clearpage
+\subsubsection{Encryption}
+\begin{figure}[H]
+\begin{minted}[frame=single]
+{python}
+def encrypt(self, pk, M, policy_str):
+    # Extract the attributes as a list
+    policy = util.createPolicy(policy_str)        
+    p_list = util.getAttributeList(policy)
+    s = group.random()
+    C_tilde = (pk['e(gg)^alpha'] ** s) * M
+    C_0 = pk['g1'] ** s
+    C, D = {}, {}
+    secret = s
+    shares = util.calculateSharesList(secret, policy)
+
+    # ciphertext
+    for i in range(len(p_list)):
+        r = group.random()
+        if shares[i][0] == p_list[i]:
+           attr = shares[i][0].getAttribute() 
+           C[ p_list[i] ] = ((pk['g1^a'] ** shares[i][1]) *
+           (group.hash(attr, G1) ** -r))
+           D[ p_list[i] ] = (pk['g2'] ** r)
+    
+    return { 'C0':C_0, 'C':C, 'D':D , 'C_tilde':C_tilde, 
+            'policy':unicode(policy_str), 'attribute':p_list }
+
+\end{minted}
+\caption{\Gls{abe} encryption function}
+\label{code:encfunc}
+\vspace*{3in}
+\end{figure}
+
+\begin{figure}[H]
+\begin{lstlisting}[language=bash, frame=single, breaklines=true ]
+>>> policy = '((ONE or THREE) and (TWO or FOUR))'
+>>> msg = group.random(GT)
+>>> cipher_text = cpabe.encrypt(master_public_key, msg, policy)
+>>> print msg
+>>> print cipher_text
+    {'C': {
+            u'TWO': <pairing.Element object at 0x>, 
+            u'FOUR': <pairing.Element object at 0x>, 
+            u'THREE': <pairing.Element object at 0>, 
+            u'ONE': <pairing.Element object at 0x}, 
+    'D': {
+            u'TWO': <pairing.Element object at 0x>, 
+            u'FOUR': <pairing.Element object at 08>, 
+            u'THREE': <pairing.Element object at 0x>, 
+            u'ONE': <pairing.Element object at 0x>}, 
+    'attribute': [u'ONE', u'THREE', u'TWO', u'FOUR'], 
+    'C_tilde': <pairing.Element object at 0x>, 
+    'policy': u'((ONE or THREE) and (TWO or FOUR))', 
+    'C0': <pairing.Element object at 0x>}
+\end{lstlisting}  
+\caption{Demo running the encryption function}
+\label{fig:encfunc} 
+\end{figure}
+
+
+Before encrypting, a policy is specified, this will be the access structure used in the encryption. Since the protocol relies on pairings, only pairing elements can be used, a random message $m$ is thus generated from the group to be used in the demonstration. If we were to encrypt some kind of readable message we would need an adapter on top, mapping messages to pairing elements. This project focus on applications where this is not needed - random group elements is sufficient for the constructions presented later, the group elements can be hashed to transform it into a random string if needed. The encryption method starts off by extracting the attributes from the policy provided, then a random group object is generated and used together with the public key and the message to calculate a internal cipher text. This secret is then split into shares using \gls{lsss} as described in \ref{subsec:lsss}. Each share is associated with one attribute and a subset of these will be require to obtain $s$ when decrypting, according to the policy.
+
+
+\clearpage 
+\subsubsection{Decryption}
+\begin{figure}[H]
+\begin{minted}[frame=single]
+{python}
+def decrypt(self, pk, sk, ct):
+    policy = util.createPolicy(ct['policy'])
+    pruned = util.prune(policy, sk['attributes'])
+    if pruned == False:
+        return False
+    coeffs = util.getCoefficients(policy)
+    numerator = pair(ct['C0'], sk['K'])
+    
+    # create list for attributes in order...
+    k_x, w_i = {}, {}
+    for i in pruned:
+        j = i.getAttributeAndIndex()
+        k = i.getAttribute()
+        k_x[ j ] = sk['K_x'][k]
+        w_i[ j ] = coeffs[j]
+        
+    C, D = ct['C'], ct['D']
+    denominator = 1
+    for i in pruned:
+        j = i.getAttributeAndIndex()
+        denominator *= ( pair(C[j] ** w_i[j], sk['L']) *
+        pair(k_x[j] ** w_i[j], D[j]) )   
+    return ct['C_tilde'] / (numerator / denominator)
+
+\end{minted}
+\caption{\Gls{abe} decryption function}
+\label{code:dencfunc}
+\end{figure}
+
+\begin{figure}[H]
+\begin{lstlisting}[language=bash, frame=single, breaklines=true ]
+>>> decrypted = cpabe.decrypt(master_public_key, secret_key, cipher_text)
+>>> decrypted == msg
+True
+>>> 
+\end{lstlisting}
+\caption{Demo running the decryption function}
+\label{fig:dencfunc}
+\end{figure}
+Decryption is done using the public parameters and a secret key corresponding to a set of attributes. First step in the decryption is to compare the access structure and the attributes present in the secret key. If the policy is not fulfilled the method can return straight away. The pruned method performs this validation and returns a "pruned" list of attributes. This is the minimal subset of the attributes satisfying the policy - in example a set including both childes of a "OR" node would be pruned to only include one of these. Finally the secrets are combined and used to recover the message. The calculations can be recognized from the decryption method in figure \ref{fig:abe_math}.
+
+
+\par
+From the scheme described it is noticeable from the encryption method that anybody can in fact encrypt for any set of attributes, as long as they have the master public key. The authentication is not mutual, the encryptor doesn't have to have any specific attributes to be able to encrypt. The protocol only provide assurances that nobody without the correct attribute set can decrypt the message, this is sufficient when used as a public key encryption mechanism, but might not hold in cases where mutual authentication is required.
+
+
 
 \section{Identity-based Authenticated Key Exchange}
 \Gls{ibe} as described in \ref{subsec:IBE}, can by utilised to provide two-party mutually \gls{ake} \cite{ibake}. The approach is based on a Diffie-Hellman key exchange using an elliptic curve. Each party chose random points $a,b$. $a^p, b^p$ are then encrypted using the other parties public key and then exchanged in succession. B will include $p^a$ which he recieved from a, this is done so that A can verify that B actually was able to decrypt what he sent. B actually adds to what he receives from A by decrypting and adding his contribution and then encrypting again. After decrypting, the session key is the product $a^{bp}$, which both can calculate. After exchanging secrets, A has to authenticate himself in the same way as B did, by sending the secret he got from B back, to show that he was able to decrypt what B sent. This technique provides mutual implicit authentication between the participants, since only the users with the correct identity can decrypt. Both parties can thus be sure that no other user than the one possessing the private key corresponding to the identity, can produce the session key. Protocol \ref{protocol:ibake} shows the procedure as described by Kolesnikov et al. \cite{ibake}. 
