@@ -29,9 +29,9 @@ The shares $y_i$ are sent to the users, while $A$ are made public.
 
 
 \section{Public Key Encryption}\label{sec:pke}
-Public key cryptography or asymmetric cryptography allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages. 
+Public key cryptography or asymmetric cryptography, as describe by ElGamal \cite{elgamal},  allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages. 
 \begin{itemize}
-\item \textbf{Setup} - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
+\item \textbf{Key generation} - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
 \item \textbf{ Encryption } - takes the public key of the receiver as input together with the message, outputs a cipher text. Only the corresponding private key can decrypt.
 \item \textbf{ Decryption } - uses the private key to decrypt the message.
 \end{itemize}
@@ -47,14 +47,23 @@ A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption
 \paragraph{Pgp/Gpg}\label{pgp}\cite{openpgp, koch2003gnu} is an extension to the classic public key scheme, combining the speed of symmetric key cryptography with the dynamic nature of public key systems. This is done by generating a random session key which is used to encrypt a message, this key is then encrypted using the public keys of each recipients and concatenated together with the cipher text. Pgp uses a hierarchy of trusted \glspl{ca} as described in \ref{sec:pke}, but also what is called a "web of trust" where users can sign the public keys of eachother to assure authenticity. This way users build a net of users verifying their identity in addition to the trusted \glspl{ca}.
 
 \subsection{Key encapsulation mechanism}
-\Gls{kem} \cite{kem_kurosawaP14} is a technique where a random key $K$ is generated together with its encryption $C$ - the encapsulation. This is useful for distribution of symmetric keys that can be used again to generate session keys for two or several parties, depending on the encapsulation mechanism. A \gls{kem} consists of three algorithms:
+\Gls{kem} \cite{kem_kurosawaP14} is a technique where a random key $K$ is generated together with its encryption $C$ - the encapsulation. This is similar to public key encryption, except that the encryption function does not take a message as input, but only a public key. A random key is then generate, encrypted and returned from the encapsulation function. This is useful for distribution of symmetric keys that can be used again to generate session keys for two or several parties, depending on the encapsulation mechanism. A \gls{kem} consists of three algorithms:
 \begin{itemize}
 \item \textbf{ Key generation } - generation of the symmetric key used by the \gls{dem}.
 \item \textbf{ Encryption } - used to encrypt the generated key, usually using some public key.
 \item \textbf{ Decryption } - reveals the symmetric key from the encapsulation.
 \end{itemize}
 
-
+\subsubsection{ElGamal Key Encapsulation \cite{elgamal-kem}}\label{subsubsec:elgamal}
+ElGamal encryption is a public key encryption scheme as described in \ref{sec:pke}. This construction can be changed slightly to become a simple \gls{kem}. Next ElGamal \gls{kem} is presented as an example of a \gls{kem}.
+\begin{description}
+\item[Key generation]\hfill \\
+Let $q$ be a prime and $G$ a group of prime order $q$. Chose two randoms $g \in G$ and $x \in \mathbb{Z}_q$. The public key $pk = g^x$ is the public key, this is published together with $q and G$. The private secret key is $sk = x$ 
+\item[Encryption]\hfill \\
+A random $r \in \mathbb{Z}_q$ is chosen. The cipher text is then $C = g^r \in G$ and the key is $k = pk^r \in G$. We say that $C$ now encapsulates $k$, and $C$.
+\item[Decryption]\hfill \\
+Computes $k$ from $C$ as $k = C^x \in G$. This is correct since \\$k = pk^r = g^{xr} = C^x$ and $ C = g^r$.
+\end{description}
 
 
 
@@ -79,19 +88,18 @@ Before public key cryptography was introduced, secure communication was only ach
 
 \clearpage
 \subsection{Identity-based encryption}\label{subsec:IBE}
-Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe}\cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot power is now in the hands of the \gls{kms}. Algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. These two are described in figure \ref{fig:ibenc2} and \ref{fig:ibenc} respectively.
+Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe}\cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
+The functions of a \gls{ibe} scheme is as following:
+\begin{description}
+\item[Setup]\hfill \\ Taking some security parameters a master public/secret key pair $(mpk, msk)$ are generated.
+\item[Key delegation]\hfill \\Using $mpk$, $msk$ and some $id$ generating a $sk_{id}$ for the specific user. 
+\item[Encryption]\hfill \\ Encrypts a message $m$ using $mpk$ and the $id$ of the desired receiver. 
+\item[Decryption] \hfill \\Decrypts cipher text $ct$ using $sk_{id}$, obtaining $m$. 
+\end{description}
+The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot power is now in the hands of the \gls{kms}. Algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. Next follows the proposed scheme by Boneh and Franklin while figure \ref{fig:ibenc} displays a demo of the implementation in Charm.
 
-\begin{itemize}
-\item \textbf{ Setup } - Taking some security parameters a master public/secret key pair $(mpk, msk)$ are generated.
-\item \textbf{ Key delegation } - Using $mpk$, $msk$ and some $id$ generating a $sk_{id}$ for the specific user. 
-\item \textbf{ Encryption } - Encrypts a message $m$ using $mpk$ and the $id$ of the desired receiver. 
-\item \textbf{ Decryption } - Decrypts cipher text $ct$ using $sk_{id}$, obtaining $m$. 
-\end{itemize}
 
-
-
-\begin{figure}
-\begin{mdframed}
+Boneh and Franklin \cite{DBLP:ibe} have proposed a scheme implementing \gls{ibe}, this construction will be presented next.
 \begin{description}
 \item[ Setup ]\hfill \\  
 Random prime $q$ and groups $G_1$ and $G_2$ of prime order $q$ are generated from the public parameters. The bilinear mapping $e: G_1 \times G_1 \rightarrow G_2$ is also defined. A random element $g \in G_1$ is chosen.\\
@@ -99,16 +107,24 @@ Next chose a random $s \in \mathbb{Z}_q^*$. The master public key is then $mpk =
 $H_1 : \{0,1\}^* \rightarrow G_1^*$ is a hash function. Another hash function $H_2 : G_2 \rightarrow \{0,1\}^n$ is chosen for a random $n$.\\
 The system's public parameters are $q,G_1,G_2,e,n,g,mpk,H_1,H_2$, which can be published.
 \item[Key generation]\hfill \\
-Generates a private key $k_id$ from a given $id \in \{0,1\}^*$, using $msk = s$, as following. Calculate $h_id = H_1(id) \in G_1^*$, and set private key $k_id = h_id^s$. This is now the private key of the user with the corresponding id.
+Generates a private key $k_{id}$ from a given $id \in \{0,1\}^*$, using $msk = s$, as following. Calculate $h_{id} = H_1(id) \in G_1^*$, and set private key $sk_{id} = h_{id}^s$. This is now the private key of the user with the corresponding id.
+\item[Encryption]\hfill \\
+Encrypts $M \in \{0,1\}^n$ using the master public key and id of the desired receiver. First computes $h_{id}=H_1(id) \in G_2^*$. Next chose a random $r \in \mathbb{Z}_q^*$, the chiper text is then \\
+\centerline{$ct = (g^r, M \oplus H_2(p_{id}^r))$, with $p_{id} = e(h_{id}, mpk) \in G_2^*$}
+
+\item[Decrypt]\hfill \\
+Decrypts a cipher text $C$ using a private key corresponding to the decryptors id, $sk_{id}$. Let $ct = (u,v)$, which yields $u = g^r$, and $v = M \oplus H_2(p_{id}^r$, as seen from the encryption function. Then the message is recovered as following:\\
+\centerline{$v \oplus H_2(e(sk_{id}, u))$}
+\centerline{$(M \oplus H_2(p_{id}^r) \oplus H_2(e(sk_{id}, g^r)) = M$}
+
+This is correct since \\ 
+\centerline{ $e(sk_{id}, g^r) = e(h_{id}^s, g^r) = e(h_{id}, g)^{sr} =$ }\\
+\centerline{$e(h_{id}, g^s)^r = e(h_{id}, mpk)^r = p_{id}^r$ }
+and it is clear that $M$ is actually xored with the hash of $p_{id}^r$ in both the encryption and decryption function.
 
 \end{description}
-\caption{\Gls{ibe}, Boneh and Franklin \cite{DBLP:ibe}}
-\label{fig:ibenc2}
-\end{mdframed}
-\end{figure}
 
-
-Figure \ref{fig:ibenc} demonstrate a \gls{ibe} scheme from the Charm framework and the implementation described by Waters\cite{ibe_waters09}.
+\par The construction of Boneh and Franklin can does the same job as the scheme by ElGamal in section \ref{subsubsec:elgamal}, with the difference being that the \gls{ibe} scheme uses a master public key and identities to encrypt messages. This scheme could also be changed to be a \gls{kem}, similar to the one presented in \ref{subsubsec:elgamal}, by having the message $M$ be a randomly generated key, and changing the input of the encryption function to only be an id and the $mpk$.
 
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \begin{figure}[H]
@@ -135,9 +151,10 @@ True
 
 First the required dependencies are imported from the Charm toolbox, in this example the pairing group and the \gls{ibe} class. On line 4 the pairing group is initiated with a elliptic curve with a 512-bit base - thus "SS512". Next the class object is initiated using the previously created group object. Line 6 to 13 demonstrate a \gls{ibe} cycle with setup, keygen, encryption and decryption.
 Notice that anybody can encrypt a message for any user without having a public key stored locally, we simply use the master public key together with the identity of the recipient. This removes a lot of overhead known from \gls{pki}, we now only need one public key for each domain. \Gls{ibe} is a somewhat more intuitive scheme, since the identity of the recipients is used as the public key, thus no connection between different public keys and user identities have to be stored.
+\par This project uses a generalization of \gls{ibe} called \gls{abe} as the basis of the later presented construction. \Gls{abe} is in short the same is \gls{ibe} with the difference being that it allows several attributes to be used as the public key, instead of only an id as in \gls{ibe}. \Gls{abe} will be described in dept in the next chapter.
 
 \section{Key Exchange}\label{sec:key_exchange}
-A fundamental requirement in many cryptographic schemes is a way of establishing a common secret to be used later to achieve confidentiality or integrity. This is usually solved using a key exchange scheme, which can be between two are a group of parties. In this project the focus is on cases with several users must be allowed. In such group settings there are two types of environment, one when the users are known before the exchange are carried out and they stay the same throughout the life cycle, and one where users join and leave dynamically. Examples of the former are conference calls where the participants are known in advance, before setting up the call, while live chats may be the opposite. 
+A fundamental requirement in many cryptographic schemes is a way of establishing a common secret to be used later to achieve confidentiality or integrity. This is usually solved using a key exchange scheme, which can be between two are a group of parties. In this project the focus is on cases with several users must be allowed. In such group settings there are two types of environment, one when the users are known before the exchange are carried out and they stay the same throughout the life cycle, and one where users join and leave dynamically. Examples of the former are conference calls where the participants are known in advance, before setting up the call, while live chats may be the opposite. This chapter will first show how normal Diffie-Hellman can be utilized to do group key exchange. Next it will be discussed how \glspl{kem} can be used to do multi-party key exchange.
 
 \subsection{Group Diffie-Hellman Key Exchange}\label{subsec:DH}
 The Diffie-Hellmann key exchange algorithm in its original form allows two parties to jointly establish a common secret key which later can be used to encrypt traffic and etc. Since the introduction of the 2-party Diffie-Hellmann researchers tried to extend it to support groups of parties \cite{steiner1996diffie, groupDH}. These configurations allow several parties, typically in a multicast group or similar network, to establish a common session key. In the 2-party Diffie-Hellman a cyclic group G =  $\langle x \rangle$ of prime order $p$ is chosen carefully. Then each party chose a random number, $a$ and $b$, before $g^a$ and $g^b$ can be exchanged and the common secret key $g^{ab}$ computed. The group configuration of the scheme uses the same principle only with several participants as shown in Figure~\ref{fig:dhgroup}. The configuration is the same for $n$ players. The scheme starts of with the first player raising $g$ to the power of his private key and sends this value to the next player in the chain. He then raises the received value to the power of his private key and sends it, plus the intermediate values on to the next player, this continues until the last player receives the set, he can now compute the session key $g^{x_1,x_2.x_3,...,x_n}$. An attacker would have been able to see all the sent combinations, but none of these combine into the session key. New players can not easily join or leave since all previous players would have to update their set. 
@@ -150,7 +167,11 @@ The Diffie-Hellmann key exchange algorithm in its original form allows two parti
 \end{figure}
 
 
-This configuration will be used when constructing key exchange schemes using both \gls{ibe} and \gls{abe}. Hybrid encryption schemes are basically doing key exchange. The focus will be on the setting with several users doing key exchange, a sollution is then to use a hybrid scheme to exchange encapsulations of randomly generated symmetric keys which can be combined to one sessions key. This session key can then be used by the \gls{dem} to communicate securly.
+\subsection{Key exchange from \glspl{kem}}\label{subsec:ke-kem}
+Gorantla et al. \cite{kem-group-kem} have shown that m\Glspl{kem}, can be used to establish secure shared keys. It is thus a feasible approach to use a functional encryption scheme as a m\Gls{kem} to build a functional key exchange scheme. The idea is that the users exchange encapsulations which all the users will be able to decrypt, obtaining a set of symmetric keys, which in turn can be combined to a shared secret key. This secret key can then be used by the \gls{dem} to encrypt the communication between the users. The implementation presented later will use this approach, using \gls{abe} extended to be a m\Gls{kem} to exchange a secret key between multiple users.
+
+
+
 
 
 

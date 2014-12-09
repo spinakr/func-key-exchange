@@ -128,7 +128,6 @@ def keygen(self, pk, msk, attributes):
 
 The secret key includes a list of all the attributes with a corresponding hash value raised to the power of a random value $t \in \mathbb{Z}_p$. Additionally a list of the unicode representations of the attributes are added - this will later be used when decrypting, to check if a given key comply with the policy given in the cipher text. The list of attributes for the secret key are compared with the attributes in the access structure before decrypting,this way we avoid actually trying to decrypt if the key doesn't contain the correct attributes. The public parameters in $pk$ must be published together with the secret keys, so that each user have a key pair consisting of their personal secret key, and the master public key. A major problem when doing \gls{abe} is preventing collusion attacks, where a group of users try to combine their attributes trying to satisfy a more restrictive access structure then what their individual sets of attributes allow. This construction avoids this by randomizing each key with a generated exponent $t$. When decrypting, each share will have this $t$ in the exponent, which is supposed to bind the components of each key together. Combining two keys would have the value of $t$ different so they would not work together.  During decryption these shares are only relevant to the particular key used in that exact run of the decryption algorithm.
 
-
 \clearpage
 \subsubsection{Encryption}
 \begin{figure}[H]
@@ -163,7 +162,7 @@ def encrypt(self, pk, M, policy_str):
 \vspace*{3in}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[]
 \begin{lstlisting}[language=bash, frame=single, breaklines=true ]
 >>> policy = '((ONE or THREE) and (TWO or FOUR))'
 >>> msg = group.random(GT)
