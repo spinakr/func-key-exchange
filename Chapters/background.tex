@@ -1,15 +1,16 @@
 \chapter{Background}
 \label{chp:background} 
-This chapter will present and discuss principles and schemes from which the project later rely. Charm is the framework used to implement the schemes, this will be described to some extent first, before continuing on to important principles and constructions which are used in the key exchanges mechanisms later.
+This chapter will present and discuss principles and schemes from which the project later develops. Charm is the framework used to implement the schemes, this will be described to some extent first, before continuing on to important principles and constructions which are used in the key exchanges mechanisms later.
 
 \section{Charm}
-Charm\cite{DBLP:Charm13} is a prototyping framework for cryptographic systems. It includes all the tools needed to implement most crypto systems, as well as keeping a collection of reusable code. The idea is to make it sufficiently easy to prototype systems which earlier only existed in research papers without actual implementations. It is of course possible to implement all schemes using other, lower level design methods, which may make for better and more efficient implementations. Most of the tools needed may be available but to combine and make good use of these is not easy. Charm focus on being readable and efficient to use. Several existing libraries is used to provide primitives needed, such as pairing groups and modular arithmetics. The design and implementation of Charm is described in detail in "Charm: a framework for rapidly prototyping cryptosystems"\cite{DBLP:Charm13}. Implementations from Charm will be used in this project to implement other protocols. Schemes from the Charm library of implemented schemes will be used as examples to describe protocols in the background chapter.
+Charm \cite{DBLP:Charm13} is a prototyping framework for cryptographic systems. It includes all the tools needed to implement most crypto systems, as well as keeping a collection of reusable code. The idea is to make it sufficiently easy to prototype systems which earlier only existed in research papers without actual implementations. It is of course possible to implement all schemes using other, lower level design methods, which may make for better and more efficient implementations. Most of the tools needed may be available but to combine and make good use of these is not easy. 
+\par Charm focuses on being readable and efficient to use. Several existing libraries are used to provide primitives needed, such as pairing groups and modular arithmetic. The design and implementation of Charm is described in detail in "Charm: a framework for rapidly prototyping cryptosystems"\cite{DBLP:Charm13}. Implementations from Charm will be used in this project to implement other protocols. Schemes from the Charm library of implemented schemes will be used as examples to describe protocols in the background chapter.
 
 
 \section{Linear Secret Sharing}\label{subsec:lsss}
-In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into $n$ pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Secret sharing is often used to store highly sensitive keys, typically private keys of a \gls{ca} or other keys which should not be assessible by a single user alone. For the cause of this project only \gls{lsss} is described as this is a key component in of the constructions used later. 
+In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into $n$ pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Secret sharing is often used to store highly sensitive keys, typically private keys of a \gls{ca} or other keys which should not be assessible by a single user alone. For the cause of this project only \gls{lsss} is described as this is a key component in many of the constructions used later. 
 
-\paragraph{A linear secret sharing scheme\cite{lsss}}, defined by $(k,n)$, where $n$ are the number of shares and $k$ the threshold to allow recovery, are defined as following.\\
+\paragraph{A linear secret sharing scheme \cite{lsss}}, defined by $(k,n)$, where $n$ are the number of shares and $k$ the threshold to allow recovery, are defined as following.\\
 \begin{itemize}
 \item \textbf{Setup} -  $A$ is a public $k\times n$ matrix with entries chosen from $F = \mathbb{Z}_m^*$ with generator $m$, a prime. $x=(x_1,x_2,\dots,x_t)^K$ is a secret vector from $F^k$. $a_{ij}$ is element at the $i$th row in the $j$th column of the matrix $A$.
 \item \textbf{Dealing phase} - A secret vector $x \in F^k$ where $x_1$ is the secret value, while the rest of the values are random from $F$. Each user get a share $y_i \in F$.
@@ -21,7 +22,7 @@ The shares $y_i$ are sent to the users, while $A$ are made public.
 \end{itemize}
 
 \subsection{Shamir Secret  Sharing}\label{sec:secret_sharing}
- Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shadows, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shadows are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shadows we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
+ Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shares, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shares are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shares we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
 
 \begin{equation}
  y(x) = m + a_1*x + a_2*x^2 + ... + a_{k-1} * x^{k-1} 
@@ -54,6 +55,10 @@ A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption
 \item \textbf{ Decryption } - reveals the symmetric key from the encapsulation.
 \end{itemize}
 
+\subsubsection{Multiple \gls{kem}}\label{mkem}
+Smart \cite{mkem} proposed to extend the notion of \glspl{kem} to include multiple parties, he named such constructions m\Glspl{kem}. Encapsulating a random generated key for multiple parties with only one encapsulkation. In other words generating one single encapsulation which several users can decrypt with their private key, retriving the symetric key.
+
+
 \subsubsection{ElGamal Key Encapsulation \cite{elgamal-kem}}\label{subsubsec:elgamal}
 ElGamal encryption is a public key encryption scheme as described in \ref{sec:pke}. This construction can be changed slightly to become a simple \gls{kem}. Next ElGamal \gls{kem} is presented as an example of a \gls{kem}.
 \begin{description}
@@ -71,24 +76,17 @@ Computes $k$ from $C$ as $k = C^x \in G$. This is correct since \\$k = pk^r = g^
 
 
 \section{Pairing-based encryption}
-Let $G$ be a group of prime order $q$ with generator $g$. $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^x, g^y)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. These assumptions are used, and relied on, in earlier crypto systems. The systems explored in this project use pairing of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier.\todo{rewrite sentence} The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
+Let $G$ be a group of prime order $q$ with generator $g$. Chose $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^x, g^y)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. These assumptions are used, and relied on, in earlier crypto systems. The systems explored in this project use pairing of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier. The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
 \begin{itemize}
-\item Bilinearity - for all $P, Q \in G_1$ and all $a,b \in \mathbb{Z}_q$, then $e(P^a, Q^b) = e(P, Q)^{ab}$
-\item Non-Degeneracy - if $P \neq 0 \implies e(P,P) \neq 1$
+\item Bilinearity - for all $h, g \in G_1$ and all $a,b \in \mathbb{Z}_q$, then $e(h^a, g^b) = e(h, g)^{ab}$
+\item Non-Degeneracy - if $h \neq 0 \implies e(g,g) \neq 1$
 \end{itemize}
 The Weil and Tate pairing are the most used pairings where these properties hold. The pairings usually consist of one elliptic curve paired with a finite field. 
 The point with all this is that problems in the first group may not all be hard in the pairing group. Discrete-logarithms are still hard since $e(g,g)$, $e(g,g^a)$ $\in G_T$ is as hard as $g,g^a \in G$ where $G_T$ is the pairing group.
 For \gls{ddh} though, we can see that to test if $z=xy$ given $g, g^x, g^y, g^z$, we can just check if $e(g, g^z) = e(g^x, g^y)$. \Gls{ddh} is thus replaced by \gls{bddh} which is defined as - given $h, g, g^x, g^y, e(h,g)^z$ it is hard to decide if $xy = z$ \cite{pairing-survey}. These definitions made it possible to implement \gls{ibe} and \gls{abe} as described in the next section.
-\todo[inline]{not sure if this is a precise understanding of pairings(?)}
 
-\section{Functional Encryption}
-Before public key cryptography was introduced, secure communication was only achieved when two parties possessed the same secret key which could be used to encrypt and decrypt messages between them. This was changed with the introduction of public key cryptography as mentioned in \ref{sec:pke}. Now, many years later, this is no longer sufficient to cover the new notion of the Internet - with distributed systems and cloud-based services. Standard public key encryption schemes focus on fully encrypting or decrypting plain texts - especially when decrypting you either have the correct key, which would allow you to recover the plain text, or you can’t. But what if you would like to allow certain keys to decrypt only a part of the plain text, or output some information about it to anybody? It could in example be useful to allow the mail service to know some meta data, while still not allowing it to decrypt the whole thing, the private key of the server could be allowed to decrypt specific parts decideding if a e-mail is spam or not.
-\par Functional encryption, as described by Boneh et al.\cite{boneh2012functional}, describes an idea where different keys produce different plain text - a function of the cipher text. One key might be used to decrypt only a specified part of the cipher text - a "function" of it. Functional schemes also make it possible for several different keys to decrypt a message if they satisfy a policy, completely or partially. This allows us to encrypt a message for a certain group of users, and later grant new users access to it without having to decrypt it. A \gls{kms} issues keys based on some characteristics, which can be used to decrypt message encrypted previously. 
-\par The term "Functional Encryption" has come to describe a wide spectrum of modern cryptography techniques, including identity-based encryption and attribute-based encryption, which will be described and demonstrated in the following sections. These schemes relates to functional encryption since it allow several independent keys to decrypt, or uses some function to decrypt without the need of \emph{one} specific key, as in symmetric key encryption.
-
-\clearpage
-\subsection{Identity-based encryption}\label{subsec:IBE}
-Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe}\cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
+\section{Identity-based encryption}\label{subsec:IBE}
+Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe} \cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
 The functions of a \gls{ibe} scheme is as following:
 \begin{description}
 \item[Setup]\hfill \\ Taking some security parameters a master public/secret key pair $(mpk, msk)$ are generated.
@@ -96,10 +94,10 @@ The functions of a \gls{ibe} scheme is as following:
 \item[Encryption]\hfill \\ Encrypts a message $m$ using $mpk$ and the $id$ of the desired receiver. 
 \item[Decryption] \hfill \\Decrypts cipher text $ct$ using $sk_{id}$, obtaining $m$. 
 \end{description}
-The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot power is now in the hands of the \gls{kms}. Algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. Next follows the proposed scheme by Boneh and Franklin while figure \ref{fig:ibenc} displays a demo of the implementation in Charm.
+The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot of power is now in the hands of the \gls{kms}. This can be compared with the power of the \gls{ca}, but algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. Next follows the proposed scheme by Boneh and Franklin while figure \ref{fig:ibenc} displays a demo of the implementation in Charm.
 
 
-Boneh and Franklin \cite{DBLP:ibe} have proposed a scheme implementing \gls{ibe}, this construction will be presented next.
+Boneh and Franklin \cite{DBLP:ibe} have proposed a scheme implementing \gls{ibe}, their construction is as following:
 \begin{description}
 \item[ Setup ]\hfill \\  
 Random prime $q$ and groups $G_1$ and $G_2$ of prime order $q$ are generated from the public parameters. The bilinear mapping $e: G_1 \times G_1 \rightarrow G_2$ is also defined. A random element $g \in G_1$ is chosen.\\
@@ -126,38 +124,15 @@ and it is clear that $M$ is actually xored with the hash of $p_{id}^r$ in both t
 
 \par The construction of Boneh and Franklin can does the same job as the scheme by ElGamal in section \ref{subsubsec:elgamal}, with the difference being that the \gls{ibe} scheme uses a master public key and identities to encrypt messages. This scheme could also be changed to be a \gls{kem}, similar to the one presented in \ref{subsubsec:elgamal}, by having the message $M$ be a randomly generated key, and changing the input of the encryption function to only be an id and the $mpk$.
 
-\definecolor{mygray}{rgb}{0.5,0.5,0.5}
-\begin{figure}[H]
-\begin{lstlisting}[language=bash, xleftmargin=2em, frame=single, framexleftmargin=1.5em, breaklines=true, numbers=left, numbersep=5pt, numberstyle=\tiny\color{mygray}]
 
->>> from charm.toolbox.pairinggroup import PairingGroup, GT
->>> from charm.schemes.ibenc.ibenc_waters09 import DSE09
->>> group = PairingGroup('SS512')
->>> ibe = DSE09(group)
->>> mpk, msk = ibe.setup()
->>> ID = "student@stud.ntnu.no"
->>> secret_key = ibe.keygen(mpk, msk, ID)
->>> msg = group.random(GT)
->>> ct = ibe.encrypt(mpk, msg, ID)
->>> decrypted_msg = ibe.decrypt(ct, secret_key)
->>> msg == decrypted_msg
-True
->>> 
-
-\end{lstlisting}
-\caption{Demo run of identity-based encryption from Charm.}
-\label{fig:ibenc}
-\end{figure}
-
-First the required dependencies are imported from the Charm toolbox, in this example the pairing group and the \gls{ibe} class. On line 4 the pairing group is initiated with a elliptic curve with a 512-bit base - thus "SS512". Next the class object is initiated using the previously created group object. Line 6 to 13 demonstrate a \gls{ibe} cycle with setup, keygen, encryption and decryption.
-Notice that anybody can encrypt a message for any user without having a public key stored locally, we simply use the master public key together with the identity of the recipient. This removes a lot of overhead known from \gls{pki}, we now only need one public key for each domain. \Gls{ibe} is a somewhat more intuitive scheme, since the identity of the recipients is used as the public key, thus no connection between different public keys and user identities have to be stored.
-\par This project uses a generalization of \gls{ibe} called \gls{abe} as the basis of the later presented construction. \Gls{abe} is in short the same is \gls{ibe} with the difference being that it allows several attributes to be used as the public key, instead of only an id as in \gls{ibe}. \Gls{abe} will be described in dept in the next chapter.
 
 \section{Key Exchange}\label{sec:key_exchange}
 A fundamental requirement in many cryptographic schemes is a way of establishing a common secret to be used later to achieve confidentiality or integrity. This is usually solved using a key exchange scheme, which can be between two are a group of parties. In this project the focus is on cases with several users must be allowed. In such group settings there are two types of environment, one when the users are known before the exchange are carried out and they stay the same throughout the life cycle, and one where users join and leave dynamically. Examples of the former are conference calls where the participants are known in advance, before setting up the call, while live chats may be the opposite. This chapter will first show how normal Diffie-Hellman can be utilized to do group key exchange. Next it will be discussed how \glspl{kem} can be used to do multi-party key exchange.
 
 \subsection{Group Diffie-Hellman Key Exchange}\label{subsec:DH}
-The Diffie-Hellmann key exchange algorithm in its original form allows two parties to jointly establish a common secret key which later can be used to encrypt traffic and etc. Since the introduction of the 2-party Diffie-Hellmann researchers tried to extend it to support groups of parties \cite{steiner1996diffie, groupDH}. These configurations allow several parties, typically in a multicast group or similar network, to establish a common session key. In the 2-party Diffie-Hellman a cyclic group G =  $\langle x \rangle$ of prime order $p$ is chosen carefully. Then each party chose a random number, $a$ and $b$, before $g^a$ and $g^b$ can be exchanged and the common secret key $g^{ab}$ computed. The group configuration of the scheme uses the same principle only with several participants as shown in Figure~\ref{fig:dhgroup}. The configuration is the same for $n$ players. The scheme starts of with the first player raising $g$ to the power of his private key and sends this value to the next player in the chain. He then raises the received value to the power of his private key and sends it, plus the intermediate values on to the next player, this continues until the last player receives the set, he can now compute the session key $g^{x_1,x_2.x_3,...,x_n}$. An attacker would have been able to see all the sent combinations, but none of these combine into the session key. New players can not easily join or leave since all previous players would have to update their set. 
+The Diffie-Hellmann key exchange algorithm in its original form allows two parties to jointly establish a common secret key which later can be used to encrypt traffic and etc. Since the introduction of the 2-party Diffie-Hellmann researchers tried to extend it to support groups of parties \cite{steiner1996diffie, groupDH}. These configurations allow several parties, typically in a multicast group or similar network, to establish a common session key. 
+\par In the 2-party Diffie-Hellman a cyclic group G =  $\langle x \rangle$ of prime order $p$ is chosen carefully. Then each party chose a random number, $a$ and $b$, before $g^a$ and $g^b$ can be exchanged and the common secret key $g^{ab}$ computed. The group configuration of the scheme uses the same principle only with several participants as shown in Figure~\ref{fig:dhgroup}. The configuration is the same for $n$ players. The scheme starts off with the first player raising $g$ to the power of his private key and sends this value to the next player in the chain. He then raises the received value to the power of his private key and sends it, plus the intermediate values, on to the next player, this continues until the last player receives the set, he can now compute the session key $g^{x_1,x_2.x_3,...,x_n}$. An attacker would have been able to see all the sent combinations, but none of these combine into the session key. New players cannot easily join or leave since all previous players would have to update their set. 
+\par It should be noted that this setup has the limitation of not being authenticated, the users participating does not authenticate themself in any way, so it is impossible to know who you are communicating with. This is why our approach later rely on a \gls{kem} providing authentication. The public key schemes presented in \ref{subsec:pke} will assure you about who you are communicating with, since only the intended user will be able to decrypt. 
 
 \begin{figure}
 \centering
@@ -167,8 +142,9 @@ The Diffie-Hellmann key exchange algorithm in its original form allows two parti
 \end{figure}
 
 
+
 \subsection{Key exchange from \glspl{kem}}\label{subsec:ke-kem}
-Gorantla et al. \cite{kem-group-kem} have shown that m\Glspl{kem}, can be used to establish secure shared keys. It is thus a feasible approach to use a functional encryption scheme as a m\Gls{kem} to build a functional key exchange scheme. The idea is that the users exchange encapsulations which all the users will be able to decrypt, obtaining a set of symmetric keys, which in turn can be combined to a shared secret key. This secret key can then be used by the \gls{dem} to encrypt the communication between the users. The implementation presented later will use this approach, using \gls{abe} extended to be a m\Gls{kem} to exchange a secret key between multiple users.
+Gorantla et al. \cite{kem-group-ke} have shown that m\Glspl{kem}, can be used to establish secure shared keys. It is thus a feasible approach to use a functional encryption scheme as a m\Gls{kem} to build a functional key exchange scheme. The idea is that the users exchange encapsulations which all the users will be able to decrypt, obtaining a set of symmetric keys, which in turn can be combined to a shared secret key. This secret key can then be used by the \gls{dem} to encrypt the communication between the users. The implementation presented later will use this approach, using \gls{abe}, extended to a m\Gls{kem}, to exchange a secret key between multiple users.
 
 
 
