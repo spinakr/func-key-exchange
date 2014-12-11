@@ -122,7 +122,6 @@ def setup(self):
 
 The class in figure \ref{code:setupfunc} is demonstrated in figure \ref{fig:setupfunc}. The environment from which the methods are run have defined an elliptic curve with bilinear mapping. The pairing $e(g_1,g_2)$  correspond to $e(g,g)$ in \ref{fig:abe_math}, with $g_1$ and $g_2$ being from two different groups. The master public and private key pair is stored locally at a server acting as a \gls{kms}. After initializing the protocol we can generate a secret key using a defined set of attributes. For this we have the key generation method seen next. How these keys are distributed is a separate concern which is not dealt with in this project. It is demonstrated how the keys are generated but not how they are distributed to the correct users. It is assumed that each user can receive their key securely from the \gls{kms}, and trust it to be reliable.
 
-\clearpage
 \subsubsection{Key Generation}
 \begin{figure}[H]
 \begin{minted}[frame=single]
@@ -147,7 +146,7 @@ def keygen(self, pk, msk, attributes):
 \label{code:keygenfunc}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[h]
 \begin{lstlisting}[language=bash, frame=single, breaklines=true ]
 >>> attr_list = ['THREE', 'ONE', 'TWO']
 >>> secret_key = cpabe.keygen(pk, msk, attr_list)

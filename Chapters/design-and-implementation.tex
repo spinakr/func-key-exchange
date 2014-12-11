@@ -80,16 +80,15 @@ Another interesting extension to the system would be to remove the broadcast ser
 
 \section{Implementation}
 The application will consist of two components, one server class and one client class. The implementations of these follow the state diagrams \ref{fig:server-state} and \ref{fig:client-state} respectively. This section will describe how these two classes are implemented, the complete implementation including the code is attached in appendix \ref{clientcode} and \ref{servercode}. The state diagrams represents exactly how the programs work together, the send and receive actions in the diagram represent sockets in the application, and the loop binding it together is equal to the main loops of each class. This eventually mean that a send in the figure have a corresponding socket.send() in the code.
-
-\begin{figure}
+\begin{figure}[h]
 \centering
-\includegraphics[trim=1cm 0cm 2cm 4cm ,scale=0.9]{server-state.pdf}
+\includegraphics[trim=1cm 0cm 2cm 3cm ,scale=0.9]{server-state.pdf}
 \caption{Internal flow of the server class}
 \label{fig:server-state}
 \end{figure}
+\clearpage
 
-
-\begin{figure}
+\begin{figure}[H]
 \centering
 \includegraphics[trim=0cm 11cm 0cm 0cm, scale=0.9]{client-state.pdf}
 \caption{Internal flow of the client class}
@@ -106,7 +105,7 @@ This section will demonstrate how the system looks in practice, figure \ref{fig:
 \end{itemize}
 
 \paragraph{Usability}
-
+\clearpage
 
 \definecolor{mygray}{rgb}{0.95, 0.95, 0.96}
 \begin{figure}
