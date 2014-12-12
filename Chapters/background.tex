@@ -10,19 +10,9 @@ Charm \cite{DBLP:Charm13} is a prototyping framework for cryptographic systems. 
 \section{Linear Secret Sharing}\label{subsec:lsss}
 In many cases it may be desirable to use more than one key when encrypting, and later require a subset of these when decrypting. This concept is called secret sharing or secret splitting - a secret is "divided" into $n$ pieces which then is distributed. To recover the message $k$ of these $n$ pieces needs to be present. Secret sharing is often used to store highly sensitive keys, typically private keys of a \gls{ca} or other keys which should not be accessible by a single user alone. For the cause of this project only \gls{lsss} is described as this is a key component in many of the constructions used later. 
 
-\paragraph{A linear secret sharing scheme \cite{lsss}}, defined by $(k,n)$, where $n$ are the number of shares and $k$ the threshold to allow recovery, are defined as following.\\
-\begin{itemize}
-\item \textbf{Setup} -  $A$ is a public $k\times n$ matrix with entries chosen from $F = \mathbb{Z}_m^*$ with generator $m$, a prime. $x=(x_1,x_2,\dots,x_t)^K$ is a secret vector from $F^k$. Element $a_{ij}$ is a element at the $i$th row in the $j$th column of the matrix $A$.
-\item \textbf{Dealing phase} - A secret vector $x \in F^k$ where $x_1$ is the secret value, while the rest of the values are random from $F$. Each user get a share $y_i \in F$.
-\centerline{$y_i = a_{i1}x_1 + a_{i2}x_2 + \dots + a_{ik}x_k$}
-For the $(k,n)$ threshold system there will be $n$ such schemes and thus a $(n\times k)$ linear system $Ax=y$.
-The shares $y_i$ are sent to the users, while $A$ are made public.
-\item \textbf{Recovery phase} - Consist of solving a linear system of equations made of combining the users equations forming a matrix $A_U$ where $U = {u_1, \dots, u_k}$ is the users participating in the recovery. The solution is then found by solving 
-\centerline{$A_Ux=y_U$}, where $y_U$ is the vector of secrets of the users. The secret is found as the first coordinate of the solution.
-\end{itemize}
 
 \subsection{Shamir Secret  Sharing}\label{sec:secret_sharing}
- Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shares, and a random number $a < p$. Then equation \ref{eq:polynom} is the polynomial used, with the secret $m$. The shares are $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shares we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
+ Shamir's secret sharing scheme \cite{shamir_share} was one of the first implementations of secret sharing, and acts as an example on how these schemes may look. The main idea behind the scheme is that given $k$ points in a plane $(x_1,y_1), ... (x_k,y_k)$ there is only one polynomial $y(x)$ of degree $k-i$ such that $y(x_i) = y_i$ for all $i$. We can thus chose a prime $p$, larger than the desired number of shares, and a random number $a < p$. Equation 2.1 is the polynomial used, with the secret $m$, with the shares $(x, y(x), p) , x=\left\{ {1,2, ... ,n}\right\}$ of which only $k$ is needed to recover $m$. With $k$ shares we obtain a set of $k$ equations with $k$ unknown which is solved unambiguously.
 
 \begin{equation}
  y(x) = m + a_1*x + a_2*x^2 + ... + a_{k-1} * x^{k-1} 
@@ -30,14 +20,14 @@ The shares $y_i$ are sent to the users, while $A$ are made public.
 
 
 \section{Public Key Encryption}\label{sec:pke}
-Public key cryptography or asymmetric cryptography, as describe by ElGamal \cite{elgamal},  allows encryption of messages without the parties sharing a secret key. Each user have a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages and verify signatures. 
+Public key cryptography or asymmetric cryptography, as describe by ElGamal \cite{elgamal},  allows encryption of messages without the parties sharing a secret key. Each user has a pair of keys, one public and one private key. The private key is used to decrypt and sign messages for authentication, while the public key - known publicly - is used to encrypt messages and verify signatures. 
 \begin{itemize}
 \item \textbf{Key generation} - takes the security parameters, depending on the implementation, and outputs a public/private key pair.
 \item \textbf{ Encryption } - takes the public key of the receiver as input together with the message, outputs a cipher text. Only the corresponding private key can decrypt.
 \item \textbf{ Decryption } - uses the private key to decrypt the message.
 \end{itemize}
 
-This setup can also be used to achieve message authentication using digital signatures. Either by the use of the same algorithms as mentioned above or with separate ones alongside these. A common problem with public key crypto systems is how you are supposed to trust that a given public key used to sign something really belongs to the claimed owner. This issue is normally dealt with using a trusted \gls{ca} issuing certificates binding a public key to a user identity. The \gls{ca} has a public/private key pair, which is used to sign certificates on request. Initially the \gls{ca} have to publish its public key together with a CA certificate. This is stored in the browsers of users trusting it. A user will typically send a signed certificate request to the \gls{ca}, including the identity to be associated with the public key. The \gls{ca} verifies the request signature and produces a certificate which is signed using the \glspl{ca} own public key. When signing, the user will include this certificate as profe of his identity, which can be verified by anybody in possession of the \glspl{ca} public key and CA certificate. 
+This setup can also be used to achieve message authentication using digital signatures. Either by the use of the same algorithms as mentioned above or with separate ones alongside these. A common problem with public key crypto systems is how you are supposed to trust that a given public key used to sign something really belongs to the claimed owner. This issue is normally dealt with using a trusted \gls{ca} issuing certificates binding a public key to a user identity. The \gls{ca} has a public/private key pair, which is used to sign certificates on request. Initially the \gls{ca} have to publish its public key together with a CA certificate. This is stored in the browsers of users trusting it. A user will typically send a signed certificate request to the \gls{ca}, including the identity to be associated with the public key. The \gls{ca} verifies the request signature and produces a certificate which is signed using the \glspl{ca} own public key. When signing, the user will include this certificate as prof of his identity, which can be verified by anybody in possession of the \glspl{ca} public key and CA certificate. 
 
 
 
@@ -57,7 +47,7 @@ A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption
 
 
 \subsubsection{ElGamal Key Encapsulation \cite{elgamal-kem}}\label{subsubsec:elgamal}
-ElGamal encryption is a public key encryption scheme as described in \ref{sec:pke}. This construction can be changed slightly to become a simple \gls{kem}. Next ElGamal \gls{kem} is presented as an example of a \gls{kem}.
+ElGamal encryption is a public key encryption scheme as described in \ref{sec:pke}. This construction can be changed slightly to become a simple \gls{kem}. Next ElGamal \gls{kem} is presented as an example of a \gls{kem}. The security of ElGamal rely on the properties of the group from which the encryption are carried out. To be secure both the \gls{cdh} and \gls{ddh} must hold in the underlying group, these properties are defined as follows. Let $G$ be a group of prime order $q$ with generator $g$. Chose $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^x, g^y)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. 
 \begin{description}
 \item[Key generation]\hfill \\
 Let $q$ be a prime and $G$ a group of prime order $q$. Chose two randoms $g \in G$ and $x \in \mathbb{Z}_q$. The public key $pk = g^x$ is the public key, this is published together with $q and G$. The private secret key is $sk = x$ 
@@ -76,18 +66,19 @@ Smart \cite{mkem} proposed to extend the notion of \glspl{kem} to include multip
 
 
 
-\section{Pairing-based encryption}
-Let $G$ be a group of prime order $q$ with generator $g$. Chose $x,z,y \in \mathbb{Z}_q$. The \emph{Discrete-logarithm} problem says that it is hard to obtain $x$ from $g^x$ and $g$. Further we have the \emph{\gls{cdh}} which extends this saying that it is hard to calculate $g^{xy}$ from the tuple $(g, g^x, g^y)$. Finally we can say that it is hard to determine if $z=xy$ given $(g, g^x, g^y, g^z)$ - \emph{\gls{ddh}}. These assumptions are used, and relied on, in earlier crypto systems. The systems explored in this project use pairing of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier. The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
+\section{Pairing-based encryption}\label{parings}
+ The schemes explored in this project use pairings \cite{pairing-survey} of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier. The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
 \begin{itemize}
 \item Bilinearity - for all $h, g \in G_1$ and all $a,b \in \mathbb{Z}_q$, then $e(h^a, g^b) = e(h, g)^{ab}$
 \item Non-Degeneracy - if $h \neq 0 \implies e(g,g) \neq 1$
 \end{itemize}
 The Weil and Tate pairing are the most used pairings where these properties hold. The pairings usually consist of one elliptic curve paired with a finite field. 
 The point with all this is that problems in the first group may not all be hard in the pairing group. Discrete-logarithms are still hard since $e(g,g)$, $e(g,g^a)$ $\in G_T$ is as hard as $g,g^a \in G$ where $G_T$ is the pairing group.
-For \gls{ddh} though, we can see that to test if $z=xy$ given $g, g^x, g^y, g^z$, we can just check if $e(g, g^z) = e(g^x, g^y)$. \Gls{ddh} is thus replaced by \gls{bddh} which is defined as - given $h, g, g^x, g^y, e(h,g)^z$ it is hard to decide if $xy = z$ \cite{pairing-survey}. These definitions made it possible to implement \gls{ibe} and \gls{abe} as described in the next section.
+For \gls{ddh} though, we can see that to test if $z=xy$ given $g, g^x, g^y, g^z$, we can just check if $e(g, g^z) = e(g^x, g^y)$. \Gls{ddh} is thus replaced by \gls{bddh} which is defined as - given $h, g, g^x, g^y, e(h,g)^z$ it is hard to decide if $xy = z$. These definitions made it possible to implement \gls{ibe} and \gls{abe} as described in the next section.
 
 \section{Identity-based encryption}\label{subsec:IBE}
-Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate, or verify them with \glspl{ca} every time. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. \Gls{ibe} \cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
+Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate, or verify them with \glspl{ca} every time. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. 
+\par \Gls{ibe} \cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
 The functions of a \gls{ibe} scheme is as following:
 \begin{description}
 \item[Setup]\hfill \\ Taking some security parameters a master public/secret key pair $(mpk, msk)$ are generated.
@@ -95,7 +86,7 @@ The functions of a \gls{ibe} scheme is as following:
 \item[Encryption]\hfill \\ Encrypts a message $m$ using $mpk$ and the $id$ of the desired receiver. 
 \item[Decryption] \hfill \\Decrypts cipher text $ct$ using $sk_{id}$, obtaining $m$. 
 \end{description}
-The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot of power is now in the hands of the \gls{kms}. This can be compared with the power of the \gls{ca}, but algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. Next follows the proposed scheme by Boneh and Franklin while figure \ref{fig:ibenc} displays a demo of Water's implementation using an implementation from Charm.
+The removal of the \glspl{ca} introduces another problem, since the users no longer generate their own key pair, a lot of power is now in the hands of the \gls{kms}. This can be compared with the power of the \gls{ca}, but algorithms using a \gls{kms} have to take into consideration that this service have complete control over all keys, and can in fact generate any key. The life cycle of a system implementing \gls{ibe} consist of 4 algorithms. In this section two \gls{ibe} systems will be presented, one basic construction proposed by Boneh and Franklin \cite{DBLP:ibe}, and one by Waters \cite{ibe_waters09} which is also part of the Charm framework. Next follows the proposed scheme by Boneh and Franklin while figure \ref{fig:ibenc} displays a demo of Water's \cite{ibe_waters09} construction using an implementation from Charm.
 
 
 Boneh and Franklin \cite{DBLP:ibe} have proposed a scheme implementing \gls{ibe}, their construction is as following:
@@ -123,7 +114,7 @@ and it is clear that $M$ is actually xored with the hash of $p_{id}^r$ in both t
 
 \end{description}
 
-\par The construction of Boneh and Franklin can does the same job as the scheme by ElGamal in section \ref{subsubsec:elgamal}, with the difference being that the \gls{ibe} scheme uses a master public key and identities to encrypt messages. This scheme could also be changed to be a \gls{kem}, similar to the one presented in \ref{subsubsec:elgamal}, by having the message $M$ be a randomly generated key, and changing the input of the encryption function to only be an id and the $mpk$.
+\par The construction of Boneh and Franklin can does the same job as the scheme by ElGamal in section \ref{subsubsec:elgamal}, with the difference being that the \gls{ibe} scheme uses a master public key and identities to encrypt messages. This scheme relies on the \gls{bddh} as described in section \ref{parings}. ElGamal encryption could also be changed to be a \gls{kem}, similar to the one presented in \ref{subsubsec:elgamal}, by having the message $M$ be a randomly generated key, and changing the input of the encryption function to only be an id and the $mpk$.
 
 
 
@@ -146,7 +137,7 @@ True
 >>> 
 
 \end{lstlisting}
-\caption{Demo run of identity-based encryption \cite{ibe_waters09} from Charm.}
+\caption{Demo run of the identity-based encryption by Waters from Charm.}
 \label{fig:ibenc}
 \end{figure}
 

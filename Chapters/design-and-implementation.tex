@@ -1,12 +1,12 @@
 \chapter{Design and Implementation}\label{chp:designimpl}
-This chapter suggests a prototype implementation of one possible application, based on the principles and ideas in the previous two sections. The protocol structure will be displayed, together with examples from the code and test runs using the system. The chosen functional key exchange scheme used is \gls{abake} as described in the previouse chapter, and it will be aplied in a distributed chat environment. 
+This chapter suggests a prototype implementation of one possible application, based on the principles and ideas in the previous two sections. The protocol structure will be displayed, together with examples from the code and test runs using the system. The chosen functional key exchange scheme used is \gls{abake} as described in the previous chapter, and it will be applied in a distributed chat environment. 
 
 \section{System specifications}\label{sec:chat}
 As mentioned in \ref{sec:apps} there are several scenarios where functional key exchange can provide security and privacy. This section will describe the structure and specifications for a chat system utilizing \gls{abake} as described in \ref{sec:abake} and  supported by Wang et al.\cite{DBLP:abake}. The system consists of a set of clients running a client application and a broadcast server. It could easily have been altered to support peer-to-peer, since the server only acts as a intermediate for broadcasting, caching of encapsulations and policy management. The system shown is meant to be a proof of concept for how this kind of application could look, it is thus simplified to some extent. Most of the data used are static to abstract away difficulties with administration of rooms and related policies, as well as key management. The implementation will not address key distribution, therefore a key is given to the users on connection. 
 
 
 
-\paragraph{The most important feature} of the system is to provide encrypted communication between users who satisfy the room policy. The users should obtain a shared session key through \gls{abake}. This way we assure implicit authentication of all users taking part in the conversation. A user should be able to participate in the exchange without ever having to provide an identity. It is assumed that all users have registered with some \gls{kms} prior to the key exchange - a user would typically register a set of attributes which would have to be approved by the system authority before issuing the key. When new users join, they should be able to upload their contribution and receive the rest of the keying material from the server; the users will then have to compute the new session key from the encapsulations. After exchanging keys, the users should be able to use it to encrypt the chat messages. It should be noted that anybody can in fact upload a contribution and receive encapsulations, but only the ones with the correct attributes can decapsulate and produce the session key. It might be smart for the server to challenge the new user to prove that he has the correct attributes. The server could require that new users prove that they have the correct attributes before being able to upload, to avoid flooding of the storage. This extension would simply mean the server challenging the new user with an encrypted nonce which the user would have to decrypt and send back. This mechanism was not included in this implementation as this project focus on demonstrating the key exchange process, and since this possible weakness not pose any threats to the integrity of the system it is not prioritized. 
+\paragraph{The most important feature} of the system is to provide encrypted communication between users who satisfy the room policy. The users should obtain a shared session key through \gls{abake}. This way we assure implicit authentication of all users taking part in the conversation. A user should be able to participate in the exchange without ever having to provide an identity. It is assumed that all users have registered with some \gls{kms} prior to the key exchange - a user would typically register a set of attributes which would have to be approved by the system authority before issuing the key. When new users join, they should be able to upload their contribution and receive the rest of the keying material from the server; the users will then have to compute the new session key from the encapsulations. After exchanging keys, the users should be able to use it to encrypt the chat messages. It should be noted that anybody can in fact upload a contribution and receive encapsulations, but only the ones with the correct attributes can decapsulate and produce the session key. The server could require that new users prove that they have the correct attributes before being able to upload, to avoid flooding of the storage. This extension would simply mean the server challenging the new user with an encrypted nonce which the user would have to decrypt and send back. This mechanism was not included in this implementation as this project focus on demonstrating the key exchange process, and since this possible weakness not pose any threats to the integrity of the system it is not prioritized. 
 
 
 
@@ -47,8 +47,8 @@ Let $U_i = \{u_1,u_2,\dots,u_n\}$ be the set of users participating in the key e
 
 
 
-\paragraph{Security concerns}
-For a system as the one presented in this project there are some security properties which should be assessed. First of all the key agreement protocol have to be secure adversaries eavesdropping on the communication channel. A seemingly legit user with access to the communication should not be able to compute the session key from the keying material exchanged without actually being a part of the session. This includes replaying packets stolen from another session. The forward and backward secrecy of the keying material as well as the session keys is a relevant problem, which may be important. Notions of forward and backwards secrecy is used differently according to the context, where the original definition assume a long-term key with a session key established using this and that future exposure of the long-term key would not reveal the session key. Alzaid et al. \cite{Alzaid2010} discuss how this is not always how the term is used nowadays, and that the current use in the context of group key communication is that a session key should not be revealed if an older key gets compromised. After establishing a session key the communication channel needs to be secured using this, preferably using authenticated encryption. The last concern for systems using this kind of key exchange mechanism is how to securely issue private keys to the users, since they can't generate these themself.      
+\section{Security concerns}
+For a system as the one presented in this project there are some security properties which should be assessed. First of all the key agreement protocol have to be secure against adversaries eavesdropping on the communication channel. A seemingly legitimate user with access to the communication should not be able to compute the session key from the keying material exchanged without actually being a part of the session. This includes replaying packets stolen from another session. The forward and backward secrecy of the keying material as well as the session keys is a relevant problem, which may be important. Notions of forward and backwards secrecy is used differently according to the context, where the original definition assume a long-term key with a session key established using this and that future exposure of the long-term key would not reveal the session key. Alzaid et al. \cite{Alzaid2010} discuss how this is not always how the term is used nowadays, and that the current use in the context of group key communication is that a session key should not be revealed if an older key gets compromised. After establishing a session key the communication channel needs to be secured using this, preferably using authenticated encryption. The last concern for systems using this kind of key exchange mechanism is how to securely issue private keys to the users, since they can't generate these themself.      
 
 
 \par The focus of this project is on the security of the session keys used to secure the communication and because these are generated from the encapsulations of the users it makes sense to consider both security of the generated session key and the encapsulations. To avoid confusion with the terminology related to forward/backward secrecy and other similar terms, a description of how the terms should be interpreted in this report are provided.
@@ -59,34 +59,15 @@ For a system as the one presented in this project there are some security proper
 \item[Session key secrecy] Compromising a session key, former or current, should not reveal any other session keys.
 \end{description}
 
-This system does not provide forward secrecy, since any user with the correct attributes can obtain all previous session keys by decapsulating and combining the correct set of encapsulations. The addition of forward secrecy is definitively a relevant extension, as discussed by Gorantla et al. \cite{gorantla2010attribute}. What the system does ensure is old encapsulation secrecy, meaning that a set of encapsulations from previous sessions will not reveal the current one. New session keys are calculated every time a new user joins, the users can be sure of this since they actually provide parts of the key material themself, the new material will not be part of previous encapsulation sets. This property is important because without it a new user could never be sure that a previous key might be compromised and reveal all the messages encrypted by him. Session key secrecy is also important since new keys are generated all the time, by users joining, there will thus exist a lot of old session keys for each room. As for users leaving a decision was made not to generate new keys when users leave. If users trusted all the users currently in a room, the removal of one of these would not change the trust, and no new key needs to be generated, saving time and resources. Especially since the system presented here uses only one server doing all the work, it is good to generate new keys as infrequently as possible, since the communication is paused during key exchange. In this case some might also argue that creating a new session key on user leave would also be preferable. In addition to this, much of the security of the system rely on the \gls{kms} not going rogue, but in the applications discussed, we can assume that the users trust the \gls{kms}, this is reasonable since each system or domain, would require users to register and thus agree to the terms and conditions of the system.
+This system does not provide forward secrecy, since any user with the correct attributes can obtain all previous session keys by decapsulating and combining the correct set of encapsulations. The addition of forward secrecy is definitively a relevant extension, as discussed by Gorantla et al. \cite{gorantla2010attribute}. What the system does ensure is old encapsulation secrecy, meaning that a set of encapsulations from previous sessions will not reveal the current one. New session keys are calculated every time a new user joins, the users can be sure of this since they actually provide parts of the key material, the new material will not be part of previous encapsulation sets. This property is important because without it a new user could never be sure that a previous key might be compromised and reveal all the messages encrypted by him. 
+\par Session key secrecy is also important since new keys are generated all the time, by users joining, there will thus exist a lot of old session keys for each room. This property is achieved by computing a new session key whenever a user joins, this property also implies implicit authentication since only users with the correct attributes can obtain the session key. As for users leaving a decision was made not to generate new keys when users leave. If users trusted all the users currently in a room, the removal of one of these would not change the trust, and no new key needs to be generated, saving time and resources. Especially since the system presented here uses only one server doing all the work, it is good to generate new keys as infrequently as possible, since the communication is paused during key exchange. In this case some might also argue that creating a new session key on user leave would also be preferable. In addition to this, much of the security of the system rely on the \gls{kms} not going rogue, but in the applications discussed, we can assume that the users trust the \gls{kms}, this is reasonable since each system or domain, would require users to register and thus agree to the terms and conditions of the system.
 
-
-
-\subsection{Possible extensions and improvements}
-The extended system would include a separate \gls{kms} which the users would register with to obtain their key. The best solution would probably be to have a separate virtual or physical server doing each task; attribute and key management, storage and distribution of keying material, broadcasting of chat messages/cipher texts. Figure \ref{fig:improved} shows how the extended system would look on a high level. Other features like being able to create your own rooms and administrate these would also be logical, and would have to be stored and handled somewhere. The prototype presented here will be a single room with a static policy.
-
-\begin{figure}
-\centering
-\includegraphics[trim=0cm 0cm 0cm 0cm, scale=0.8]{complete-system.pdf}
-\caption{Improved system architecture}
-\label{fig:improved}
-\end{figure}
-
-Another interesting extension to the system would be to remove the broadcast servers completely and apply a peer-to-peer setup, where the users distribute the encapsulations and the chat messages themself. The users would have to broadcast their encapsulations individually, the structure would look much like the one in group Diffie-Hellman as described in \ref{subsec:DH}. The users would need to have some way of knowing where to send their encapsulations, this could be solved by using multicast groups, which new users subscribes to, allowing them to receive new encapsulations, this would essentially be the same as the configuration used in this project. This setup would also require the users to negotiate the policy of the room without an intermediate server keeping track of this. To avoid pauses in the communication, the key exchange could be done in parallel while still using the old key, change to the new one when finished. 
 
 
 
 
 \section{Implementation}
-The application will consist of two components, one server class and one client class. The implementations of these follow the state diagrams \ref{fig:server-state} and \ref{fig:client-state} respectively. This section will describe how these two classes are implemented, the complete implementation including the code is attached in appendix \ref{clientcode} and \ref{servercode}. The state diagrams represents exactly how the programs work together, the send and receive actions in the diagram represent sockets in the application, and the loop binding it together is equal to the main loops of each class. This eventually mean that a send in the figure have a corresponding socket.send() in the code.
-\begin{figure}[h]
-\centering
-\includegraphics[trim=1cm 0cm 2cm 3cm ,scale=0.9]{server-state.pdf}
-\caption{Internal flow of the server class}
-\label{fig:server-state}
-\end{figure}
-\clearpage
+The application will consist of two components, one client class and one server class. The implementations of these follow the state diagrams \ref{fig:client-state} and \ref{fig:server-state} respectively. This section will describe how these two classes are implemented, the complete implementation including the code is attached in appendix \ref{clientcode} and \ref{servercode}. The state diagrams represents exactly how the programs work together, the send and receive actions in the diagram represent sockets in the application, and the loop binding it together is equal to the main loops of each class. This eventually mean that a send in the figure has a corresponding socket.send() in the code.
 
 \begin{figure}[H]
 \centering
@@ -95,6 +76,14 @@ The application will consist of two components, one server class and one client 
 \label{fig:client-state}
 \end{figure}
 
+\begin{figure}[h]
+\centering
+\includegraphics[trim=1cm 0cm 2cm 3cm ,scale=0.9]{server-state.pdf}
+\caption{Internal flow of the server class}
+\label{fig:server-state}
+\end{figure}
+
+\clearpage
 \section{System demonstration}
 This section will demonstrate how the system looks in practice, figure \ref{fig:server-output}, \ref{fig:client1-output} and \ref{fig:client2-output} shows how the system acts from the perspective of the server and from the clients, respectively. 
 \begin{itemize}
@@ -104,8 +93,6 @@ This section will demonstrate how the system looks in practice, figure \ref{fig:
 \item When the second user joins it can be seen that the first user generates a new key which is the same as the one generated at the second user. The messages are now encrypted using this key.
 \end{itemize}
 
-\paragraph{Usability}
-\clearpage
 
 \definecolor{mygray}{rgb}{0.95, 0.95, 0.96}
 \begin{figure}
