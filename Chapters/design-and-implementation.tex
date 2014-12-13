@@ -1,7 +1,7 @@
 \chapter{Design and Implementation}\label{chp:designimpl}
 This chapter suggests a prototype implementation of one possible application, based on the principles and ideas in the previous two sections. The protocol structure will be displayed, together with examples from the code and test runs using the system. The chosen functional key exchange scheme used is \gls{abake} as described in the previous chapter, and it will be applied in a distributed chat environment. 
 
-\section{System specifications}\label{sec:chat}
+\section{System Specifications}\label{sec:chat}
 As mentioned in \ref{sec:apps} there are several scenarios where functional key exchange can provide security and privacy. This section will describe the structure and specifications for a chat system utilizing \gls{abake} as described in \ref{sec:abake} and  supported by Wang et al.\cite{DBLP:abake}. The system consists of a set of clients running a client application and a broadcast server. It could easily have been altered to support peer-to-peer, since the server only acts as a intermediate for broadcasting, caching of encapsulations and policy management. The system shown is meant to be a proof of concept for how this kind of application could look, it is thus simplified to some extent. Most of the data used are static to abstract away difficulties with administration of rooms and related policies, as well as key management. The implementation will not address key distribution, therefore a key is given to the users on connection. 
 
 
@@ -10,7 +10,7 @@ As mentioned in \ref{sec:apps} there are several scenarios where functional key 
 
 
 
-\section{Models and construction}
+\section{Models and Construction}\label{sec:models}
 The high level construction of the key exchange used in the system is based on the generic one-round AB-AKE protocol presented by Gorantla et al. \cite{gorantla2010attribute}, the main differences being the encapsulation function used. The implementation described in this project is constructed based on the \gls{abe} scheme implemented in Charm, as described in \ref{subsec:ABE} and  by Waters et al.\cite{abe_waters09}, while Gorantla et al.\cite{gorantla2010attribute} introduce their own \gls{epabkem}. This project propose a complete system utilizing the key exchange, so after obtaining a shared key, users encrypt their messages using a standard symmetric key encryption algorithm. The messages are broadcast through the same broadcast server used for key exchange. 
 \par When a new user joins, the message exchanges are paused until the new key is calculated by all users. Figure \ref{fig:flow} shows the system flow when a new user connects. A client will first query the server for the room policy, before an encapsulation is generated from the received policy and the public parameters. The encapsulation is sent to the server which distributes it so that all users have all contributions. Now the users will start using the session key to encrypt the chat messages and the server will go back to being a pure broadcast server for the now encrypted chat messages. 
 \par Figure \ref{fig:encapdistr} illustrates the encapsulation distribution process. Bob is a new user, so he uploads his contribution to the server, there are $n$ users already in the system. Next the server broadcast Bob's encapsulation to the current users, before sending the set of active encapsulations to Bob. After obtaining all encapsulations, all users initiate the key generation procedure, as shown in figure \ref{fig:keygen}, which consist of decapsulating the encapsulations, then using the symmetric keys with a pseudo random function on a session id, finally combining them using bitwise xor. For the pseudo random function keyed hmac from the python library is used. The session id is the concatenation of the socket addresses of each user, as for the presented implementation these addresses are sent from the server together with the encapsulations, but if the system was to be extended to a peer-to-peer configuration, each encapsulation would be sent individually from different addresses and could be obtained by the users directly. 
@@ -47,7 +47,7 @@ Let $U_i = \{u_1,u_2,\dots,u_n\}$ be the set of users participating in the key e
 
 
 
-\section{Security concerns}
+\section{Security Concerns}\label{sec:concerns}
 For a system as the one presented in this project there are some security properties which should be assessed. First of all the key agreement protocol have to be secure against adversaries eavesdropping on the communication channel. A seemingly legitimate user with access to the communication should not be able to compute the session key from the keying material exchanged without actually being a part of the session. This includes replaying packets stolen from another session. The forward and backward secrecy of the keying material as well as the session keys is a relevant problem, which may be important. Notions of forward and backwards secrecy is used differently according to the context, where the original definition assume a long-term key with a session key established using this and that future exposure of the long-term key would not reveal the session key. Alzaid et al. \cite{Alzaid2010} discuss how this is not always how the term is used nowadays, and that the current use in the context of group key communication is that a session key should not be revealed if an older key gets compromised. After establishing a session key the communication channel needs to be secured using this, preferably using authenticated encryption. The last concern for systems using this kind of key exchange mechanism is how to securely issue private keys to the users, since they can't generate these themself.      
 
 
@@ -84,7 +84,7 @@ The application will consist of two components, one client class and one server 
 \end{figure}
 
 \clearpage
-\section{System demonstration}
+\section{System Demonstration}\label{sec:demo}
 This section will demonstrate how the system looks in practice, figure \ref{fig:server-output}, \ref{fig:client1-output} and \ref{fig:client2-output} shows how the system acts from the perspective of the server and from the clients, respectively. 
 \begin{itemize}
 \item First the server is started with a preset policy as highlighted in \ref{fig:server-output}, then two users join in succession, it can be seen that for each new user encapsulations are broadcast. The clients that connect can be observed in \ref{fig:client1-output} and \ref{fig:client2-output}  - when starting the client program, it will automatically try connecting to the server on address given as argument to the program. 

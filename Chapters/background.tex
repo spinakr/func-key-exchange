@@ -37,7 +37,7 @@ A hybrid encryption scheme \cite{hybrid_enc} consists of a public key encryption
 
 \paragraph{Pgp/Gpg}\label{pgp}\cite{openpgp, koch2003gnu} is an extension to the classic public key scheme, combining the speed of symmetric key cryptography with the dynamic nature of public key systems. This is done by generating a random session key which is used to encrypt a message, this key is then encrypted using the public keys of each recipients and concatenated together with the cipher text. Pgp uses a hierarchy of trusted \glspl{ca} as described in \ref{sec:pke}, but also what is called a "web of trust" where users can sign the public keys of eachother to assure authenticity. This way users build a net of users verifying their identity in addition to the trusted \glspl{ca}.
 
-\subsection{Key encapsulation mechanism}
+\subsection{Key Encapsulation Mechanism}
 \Gls{kem} \cite{kem_kurosawaP14} is a technique where a random key $K$ is generated together with its encryption $C$ - the encapsulation. This is similar to public key encryption, except that the encryption function does not take a message as input, but only a public key. A random key is then generate, encrypted and returned from the encapsulation function. This is useful for distribution of symmetric keys that can be used again to generate session keys for two or several parties, depending on the encapsulation mechanism. A \gls{kem} consists of three algorithms:
 \begin{itemize}
 \item \textbf{ Key generation } - generation of the symmetric key used by the \gls{dem}.
@@ -66,7 +66,7 @@ Smart \cite{mkem} proposed to extend the notion of \glspl{kem} to include multip
 
 
 
-\section{Pairing-based encryption}\label{parings}
+\section{Pairing-based Encryption}\label{parings}
  The schemes explored in this project use pairings \cite{pairing-survey} of the traditional group assumptions. The idea behind this is to use a mapping between two cryptographic groups which allows the creation of new schemes based on the reduction of one of the problems from earlier. The most renowned pairing-based construction is the \emph{bilinear map}. $G_1$ and $G_2$ are groups of prime order $q$. If $e: G_1 \times G_1 \rightarrow G_2$ then the mapping $e$ should have the following properties to be useful: 
 \begin{itemize}
 \item Bilinearity - for all $h, g \in G_1$ and all $a,b \in \mathbb{Z}_q$, then $e(h^a, g^b) = e(h, g)^{ab}$
@@ -76,7 +76,7 @@ The Weil and Tate pairing are the most used pairings where these properties hold
 The point with all this is that problems in the first group may not all be hard in the pairing group. Discrete-logarithms are still hard since $e(g,g)$, $e(g,g^a)$ $\in G_T$ is as hard as $g,g^a \in G$ where $G_T$ is the pairing group.
 For \gls{ddh} though, we can see that to test if $z=xy$ given $g, g^x, g^y, g^z$, we can just check if $e(g, g^z) = e(g^x, g^y)$. \Gls{ddh} is thus replaced by \gls{bddh} which is defined as - given $h, g, g^x, g^y, e(h,g)^z$ it is hard to decide if $xy = z$. These definitions made it possible to implement \gls{ibe} and \gls{abe} as described in the next section.
 
-\section{Identity-based encryption}\label{subsec:IBE}
+\section{Identity-based Encryption}\label{subsec:IBE}
 Public key systems rely on a trusted \gls{ca}, issuing certificates assuring the binding between a public key and a claimed owner. The user generate their key pair themselves, then the public key has to be signed by a trusted \glsdesc{ca}. Now the public key can be verified, assuring that nobody is forging it. Each user has to keep a large archive of keys belonging to whom he wants to communicate, or verify them with \glspl{ca} every time. More problems arise when a user wants to declare his key invalid and revoke it. All this makes for a big infrastructure of \glspl{ca} and revocation mechanisms. 
 \par \Gls{ibe} \cite{DBLP:ibe} introduce an approach where a users id act as the public key, this identity can typically be an e-mail address or a user name. There are no \glspl{ca}, but instead each domain have a \gls{kms} with a master public/secret key pair. The master public key can be used in conjunction with the id of the desired receiver to encrypt the message. The receiver can then decrypt the cipher text using his private key. This private key is extracted by the \gls{kms} from the identity of the specific user. 
 The functions of a \gls{ibe} scheme is as following:
@@ -162,7 +162,7 @@ The Diffie-Hellmann key exchange algorithm in its original form allows two parti
 
 
 
-\subsection{Key exchange from key encapsulation}\label{subsec:ke-kem}
+\subsection{Key Exchange from Key Encapsulation}\label{subsec:ke-kem}
 Gorantla et al. \cite{kem-group-ke} have shown that m\Glspl{kem}, can be used to establish secure shared keys. It is thus a feasible approach to use a functional encryption scheme as a m\Gls{kem} to build a functional key exchange scheme. The idea is that the users exchange encapsulations which all the users will be able to decrypt, obtaining a set of symmetric keys, which in turn can be combined to a shared secret key. This secret key can then be used by the \gls{dem} to encrypt the communication between the users. The implementation presented later will use this approach, using \gls{abe}, extended to a m\Gls{kem}, to exchange a secret key between multiple users.
 
 
